@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR ยิงธนูเคมีอินทรีย์: ภารกิจพิชิตชื่อ IUPAC</title>
+  <title>AR ปาน้ำยาเคมี: ภารกิจพิชิตชื่อ IUPAC</title>
   
-  <!-- Fonts & CDNs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -36,31 +35,36 @@
       font-weight: 500; color: #ffffff; white-space: nowrap; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.4); transition: opacity 0.2s;
     }
 
-    #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; display: none; }
-    .hud-top { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    /* HUD Elements (Will be hidden during gameplay) */
+    #hud-top, #side-controls { transition: opacity 0.3s ease; }
+    .hud-top { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 5;}
     .hud-stats-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px; padding: 10px 24px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(8px); box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
     .hud-item { display: flex; flex-direction: column; align-items: center; }
     .hud-item .title { font-size: 0.75rem; color: #94a3b8; }
     .hud-item .value { font-size: 1.3rem; font-weight: 600; color: #f8fafc; }
     .hud-player-name { font-size: 1rem; color: #fbbf24; font-weight: 500; border-bottom: 1px dashed #fbbf24; padding-bottom: 2px; }
 
-    .quest-banner { background: rgba(30, 41, 59, 0.9); border-left: 4px solid #38bdf8; border-radius: 8px; padding: 6px 18px; text-align: center; max-width: 650px; }
-    .quest-title { font-size: 0.95rem; color: #38bdf8; font-weight: 600; }
-    .quest-desc { font-size: 0.85rem; color: #cbd5e1; }
-    #status-notification { font-size: 1.1rem; font-weight: 500; color: #38bdf8; text-shadow: 0 2px 4px rgba(0,0,0,0.8); min-height: 28px; }
-
-    .side-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; }
+    .side-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; pointer-events: auto; z-index: 5;}
     .cyber-btn { background: #334155; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: all 0.1s ease; }
     .cyber-btn:active { transform: translateY(2px); }
     .cyber-btn.active { background: #10b981; }
+
+    /* Minimal HUD (Only visible during gameplay) */
+    #minimal-hud {
+      position: absolute; bottom: 20px; right: 20px; z-index: 6;
+      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+      border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 12px;
+      padding: 8px 16px; display: none; text-align: right;
+    }
+    .minimal-text { font-size: 1.2rem; font-weight: 500; color: #38bdf8; }
 
     #score-popup { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 5rem; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; text-shadow: 0 6px 18px rgba(0,0,0,0.8); }
     #score-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
     .score-add { color: #4ade80; }
     .score-sub { color: #f87171; }
 
-    #charge-gauge-container { position: absolute; width: 22px; height: 180px; background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(255,255,255,0.4); border-radius: 12px; overflow: hidden; display: none; flex-direction: column; justify-content: flex-end; z-index: 6; pointer-events: none; }
-    #charge-gauge-fill { width: 100%; height: 0%; background: linear-gradient(to top, #38bdf8, #ef4444); transition: height 0.05s linear; }
+    #charge-gauge-container { position: absolute; width: 22px; height: 120px; background: rgba(15, 23, 42, 0.8); border: 2px solid rgba(255,255,255,0.4); border-radius: 12px; overflow: hidden; display: none; flex-direction: column; justify-content: flex-end; z-index: 6; pointer-events: none; }
+    #charge-gauge-fill { width: 100%; height: 0%; background: linear-gradient(to top, #38bdf8, #a855f7); transition: height 0.05s linear; }
     #charge-gauge-text { position: absolute; top: -28px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 600; color: #fff; text-shadow: 0 2px 4px #000; }
 
     #reading-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 15; display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px; }
@@ -78,23 +82,19 @@
     .player-name-container { margin-bottom: 20px; }
     .input-player-name { width: 100%; padding: 14px 20px; font-size: 1.2rem; background: #0f172a; border: 2px solid #475569; border-radius: 12px; color: #f8fafc; text-align: center; transition: all 0.3s; }
     .input-player-name:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
-    .input-player-name::placeholder { color: #64748b; }
     .save-status-box { margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 1rem; font-weight: 500; background: rgba(0,0,0,0.2); }
 
     .checklist { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
     .check-item { display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 12px 20px; border-radius: 10px; }
     .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #38bdf8; border-radius: 50%; animation: spin 0.8s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
     .badge-ok { color: #4ade80; font-weight: 600; font-size: 1.2rem; }
     
     .btn-action { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; border: none; padding: 14px 40px; font-size: 1.2rem; font-weight: 600; border-radius: 14px; cursor: pointer; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4); transition: all 0.2s; }
-    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6); }
-    .btn-action:disabled { background: #475569; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-action:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
   </style>
 </head>
 <body>
 
-  <!-- Background Camera Video -->
   <video id="webcam-video" playsinline></video>
   <canvas id="hand-debug-canvas"></canvas>
   <div id="canvas-container"></div>
@@ -103,13 +103,11 @@
   <div id="player-zone" class="zone-overlay"></div>
   <div id="score-popup"></div>
 
-  <!-- Bow Pull Gauge -->
   <div id="charge-gauge-container">
     <div id="charge-gauge-text">0%</div>
     <div id="charge-gauge-fill"></div>
   </div>
 
-  <!-- Reading Phase Overlay -->
   <div id="reading-overlay">
     <div class="reading-box">
       <div id="reading-stage" class="reading-stage">ด่านที่ X</div>
@@ -118,57 +116,40 @@
     </div>
   </div>
 
-  <!-- Main Game HUD -->
-  <div id="hud">
-    <div class="hud-top">
-      <div class="hud-stats-card">
-        <!-- แสดงชื่อผู้เล่น -->
-        <div class="hud-item" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 20px;">
-          <span class="title">ผู้เล่น</span>
-          <span id="hud-player-name-display" class="hud-player-name">-</span>
-        </div>
-        <div class="hud-item">
-          <span class="title">คะแนน</span>
-          <span id="hud-score" class="value">0</span>
-        </div>
-        <div class="hud-item">
-          <span class="title">เวลา</span>
-          <span id="hud-timer" class="value">00:00</span>
-        </div>
-        <div class="hud-item">
-          <span class="title">ภารกิจ</span>
-          <span id="hud-question-idx" class="value">0/15</span>
-        </div>
-        <div class="hud-item">
-          <span class="title">สถานะมือ</span>
-          <span id="hud-hand-status" class="value" style="font-size:0.95rem; color:#38bdf8;">พร้อมยิง</span>
-        </div>
+  <!-- Big HUD (Hidden during gameplay) -->
+  <div id="hud-top" class="hud-top" style="display: none;">
+    <div class="hud-stats-card">
+      <div class="hud-item" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 20px;">
+        <span class="title">ผู้เล่น</span>
+        <span id="hud-player-name-display" class="hud-player-name">-</span>
       </div>
-      <div class="quest-banner">
-        <div id="quest-stage" class="quest-title">ด่านที่ 1</div>
-        <div id="quest-desc" class="quest-desc">-</div>
+      <div class="hud-item">
+        <span class="title">คะแนนสะสม</span>
+        <span id="hud-score" class="value" style="color:#4ade80;">0</span>
       </div>
-      <div id="status-notification">เตรียมตัวเล็งเป้าหมาย!</div>
     </div>
+  </div>
 
-    <!-- Side Cyber Buttons -->
-    <div class="side-controls">
-      <button id="btn-swap-hand" class="cyber-btn"><span>สลับมือยิง</span> <span id="swap-status">ปิด</span></button>
-      <button id="btn-toggle-landmarks" class="cyber-btn"><span>จุดตรวจมือ</span> <span id="landmarks-status">ปิด</span></button>
-      <button id="btn-toggle-sound" class="cyber-btn active"><span>เสียง SFX</span> <span id="sound-status">เปิด</span></button>
-      <button id="btn-restart" class="cyber-btn" style="background:#e11d48;"><span>เริ่มใหม่</span></button>
-    </div>
+  <!-- Side Controls (Hidden during gameplay) -->
+  <div id="side-controls" class="side-controls" style="display: none;">
+    <button id="btn-swap-hand" class="cyber-btn"><span>สลับมือเล็ง</span> <span id="swap-status">ปิด</span></button>
+    <button id="btn-toggle-landmarks" class="cyber-btn"><span>จุดตรวจมือ</span> <span id="landmarks-status">ปิด</span></button>
+    <button id="btn-toggle-sound" class="cyber-btn active"><span>เสียง SFX</span> <span id="sound-status">เปิด</span></button>
+  </div>
+
+  <!-- Minimal HUD (Only thing shown during gameplay) -->
+  <div id="minimal-hud">
+    <div class="minimal-text" id="minimal-q-num">ด่านที่ 1 | ข้อ 1/3</div>
   </div>
 
   <!-- หน้าเริ่มเกม -->
   <div id="welcome-screen">
     <div class="modal-box">
-      <h1>🏹 AR ยิงธนูเคมีอินทรีย์</h1>
-      <p class="subtitle">ระบบฝึกทักษะการเรียกชื่อสารอินทรีย์ตามระบบ IUPAC เสมือนจริง</p>
+      <h1>🧪 AR ปาน้ำยาเคมี</h1>
+      <p class="subtitle">ภารกิจพิชิตชื่อสารอินทรีย์ IUPAC (สุ่มคำถามกว่า 250 ข้อ)</p>
       
-      <!-- ช่องกรอกชื่อผู้เล่น -->
       <div class="player-name-container">
-        <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 กรุณาพิมพ์ชื่อ-นามสกุล ของคุณที่นี่..." autocomplete="off">
+        <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 พิมพ์ชื่อ-นามสกุล..." autocomplete="off">
       </div>
 
       <div class="checklist">
@@ -181,7 +162,6 @@
           <span id="check-ai-status"><div class="spinner"></div></span>
         </div>
       </div>
-
       <button id="btn-start-game" class="btn-action" disabled>กำลังเตรียมระบบ...</button>
     </div>
   </div>
@@ -190,57 +170,101 @@
   <div id="end-screen" style="display:none;">
     <div class="modal-box">
       <h1>🏆 ภารกิจเสร็จสมบูรณ์!</h1>
-      <p class="subtitle">คุณผ่านการทดสอบทักษะการตั้งชื่อสารประกอบอินทรีย์ครบ 15 ข้อ</p>
-      
+      <p class="subtitle">คุณผ่านการทดสอบทักษะเคมีทั้ง 5 ด่านเรียบร้อยแล้ว</p>
       <div style="margin: 30px 0;">
         <span style="font-size:1.2rem; color:#94a3b8;">คะแนนรวมของ <span id="final-player-name" style="color:#fff;"></span></span>
         <div id="final-score-val" style="font-size: 4rem; color: #38bdf8; font-weight:700;">0</div>
-        <span id="final-rating" style="font-size:1.1rem; color:#4ade80;">ยอดเยี่ยมมาก! เซียนเคมี IUPAC</span>
       </div>
-
-      <!-- สถานะการบันทึกข้อมูลไปหาครู -->
       <div id="save-data-status" class="save-status-box">กำลังเตรียมส่งข้อมูล...</div>
-
       <button id="btn-play-again" class="btn-action" style="margin-top: 15px;">เล่นอีกครั้ง</button>
     </div>
   </div>
 
   <script>
     /* ==========================================================================
-       CONFIGURATION & DATA
+       CONFIGURATION & PROCEDURAL DATA GENERATION (250 QUESTIONS)
        ========================================================================== */
-    // ⚠️ นำ URL จาก Google Apps Script (Web App) ของคุณครูมาใส่ในเครื่องหมายคำพูดด้านล่างนี้
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxZYt87fSUExqnXL7cPIKvDWOFHj1ya3N5OD_zm0tkwrfNWHR4qE85EhYBJi8khQi_I/exec"; 
+    let syncInterval; 
 
-    let syncInterval; // ตัวแปรสำหรับส่งข้อมูลไปหาครูเป็นระยะๆ
+    // Generate 50 unique questions for each of the 5 stages (Total 250)
+    const STAGE_POOLS = [[], [], [], [], []];
+    const THAI_NUM = ["ศูนย์", "มอนอ", "ได", "ไตร", "เตตระ", "เพนตะ", "เฮกซะ"];
+    const ALKANES = ["Methane", "Ethane", "Propane", "Butane", "Pentane", "Hexane", "Heptane", "Octane", "Nonane", "Decane", "Undecane", "Dodecane"];
+    const ALKYLS = ["Methyl", "Ethyl", "Propyl", "Butyl"];
 
-    const CHEMISTRY_QUESTIONS = [
-      { stage: "ด่านที่ 1: หา สายโซ่หลัก (ข้อ 1/3)", desc: "สาร: CH3-CH(CH3)-CH2-CH2-CH3 (โซ่คาร์บอนยาวที่สุดมีกี่ C?)", correct: "Pentane (5 คาร์บอน)", wrongs: ["Hexane (6 คาร์บอน)", "Butane (4 คาร์บอน)"] },
-      { stage: "ด่านที่ 1: หา สายโซ่หลัก (ข้อ 2/3)", desc: "สาร: CH3-CH2-C(CH2-CH3)2-CH2-CH2-CH3 (หาโซ่หลักที่ยาวต่อเนื่องสุด)", correct: "Heptane (7 คาร์บอน)", wrongs: ["Hexane (6 คาร์บอน)", "Octane (8 คาร์บอน)"] },
-      { stage: "ด่านที่ 1: หา สายโซ่หลัก (ข้อ 3/3)", desc: "สาร: โซ่คาร์บอนต่อกันเป็นเส้นตรง CH3-(CH2)6-CH3 โซ่หลักคือ?", correct: "Octane (8 คาร์บอน)", wrongs: ["Nonane (9 คาร์บอน)", "Heptane (7 คาร์บอน)"] },
-      { stage: "ด่านที่ 2: เลือก ทิศทางการนับ (ข้อ 1/3)", desc: "สาร: CH3-CH(CH3)-CH2-CH2-CH3 ต้องเริ่มนับตำแหน่งคาร์บอนจากข้างใด?", correct: "นับจากซ้าย (เกาะที่ C-2)", wrongs: ["นับจากขวา (เกาะที่ C-4)", "นับจากด้านใดก็ได้"] },
-      { stage: "ด่านที่ 2: เลือก ทิศทางการนับ (ข้อ 2/3)", desc: "สาร: CH3-CH(Cl)-CH2-CH(Br)-CH3 ให้ตัวเลขรวมระบุตำแหน่งน้อยที่สุด", correct: "นับจากขวา (Br=2, Cl=4)", wrongs: ["นับจากซ้าย (Cl=2, Br=4)", "นับจากกึ่งกลาง C-3"] },
-      { stage: "ด่านที่ 2: เลือก ทิศทางการนับ (ข้อ 3/3)", desc: "สาร: CH3-C(CH3)2-CH2-CH(CH3)-CH3 ฝั่งซ้ายมี 2 กิ่ง ฝั่งขวามี 1 กิ่ง", correct: "นับจากซ้าย (ตำแหน่ง 2,2,4)", wrongs: ["นับจากขวา (ตำแหน่ง 2,4,4)", "นับทางไหนผลรวมเท่ากัน"] },
-      { stage: "ด่านที่ 3: ระบุ พันธะคู่/พันธะสาม (ข้อ 1/3)", desc: "สาร: CH3-CH=CH-CH3 สารนี้จัดอยู่ในกลุ่มใดและมีพันธะชนิดใด?", correct: "แอลคีน (พันธะคู่ C=C)", wrongs: ["แอลไคน์ (พันธะสาม C≡C)", "แอลเคน (พันธะเดี่ยว C-C)"] },
-      { stage: "ด่านที่ 3: ระบุ พันธะคู่/พันธะสาม (ข้อ 2/3)", desc: "สาร: CH≡C-CH2-CH3 พันธะสามอยู่ตำแหน่งคาร์บอนใดเมื่อนับถูกต้อง?", correct: "But-1-yne (ตำแหน่ง 1)", wrongs: ["But-3-yne (ตำแหน่ง 3)", "But-2-yne (ตำแหน่ง 2)"] },
-      { stage: "ด่านที่ 3: ระบุ พันธะคู่/พันธะสาม (ข้อ 3/3)", desc: "สาร: CH2=CH-CH2-C≡CH มีทั้งคู่และสามที่ปลายทั้งคู่ ใครได้เลขน้อย?", correct: "พันธะคู่ C=C ได้ตำแหน่ง 1", wrongs: ["พันธะสาม C≡C ได้ตำแหน่ง 1", "ใครก็ได้ ตำแหน่งเท่ากัน"] },
-      { stage: "ด่านที่ 4: ระบุ หมู่แทนที่ (ข้อ 1/3)", desc: "กิ่งคาร์บอนที่มีสูตร -CH3 เรียกชื่อหมู่แทนที่ว่าอะไร?", correct: "Methyl (เมทิล)", wrongs: ["Ethyl (เอทิล)", "Propyl (โพรพิล)"] },
-      { stage: "ด่านที่ 4: ระบุ หมู่แทนที่ (ข้อ 2/3)", desc: "กิ่งที่มีคาร์บอน 2 อะตอม สูตร -CH2-CH3 คือหมู่ใด?", correct: "Ethyl (เอทิล)", wrongs: ["Butyl (บิวทิล)", "Methyl (เมทิล)"] },
-      { stage: "ด่านที่ 4: ระบุ หมู่แทนที่ (ข้อ 3/3)", desc: "ถ้าในโมเลกุลมีหมู่ Methyl อยู่ 3 หมู่ ต้องใช้คำอุปสรรคใดข้างหน้า?", correct: "Tri- (ไตร)", wrongs: ["Di- (ได)", "Tetra- (เตตระ)"] },
-      { stage: "ด่านที่ 5: ตั้งชื่อ IUPAC เต็มรูปแบบ (ข้อ 1/3)", desc: "จงเรียกชื่อสาร: CH3-CH(CH3)-CH2-CH3 ให้ถูกต้องสมบูรณ์", correct: "2-methylbutane", wrongs: ["3-methylbutane", "2-dimethylbutane"] },
-      { stage: "ด่านที่ 5: ตั้งชื่อ IUPAC เต็มรูปแบบ (ข้อ 2/3)", desc: "จงเรียกชื่อสาร: CH3-C(CH3)2-CH3 (สารประกอบคาร์บอน 5 อะตอม)", correct: "2,2-dimethylpropane", wrongs: ["2-dimethylpropane", "2,2-methylpropane"] },
-      { stage: "ด่านที่ 5: ตั้งชื่อ IUPAC เต็มรูปแบบ (ข้อ 3/3)", desc: "จงเรียกชื่อสาร: CH2=CH-CH(CH3)-CH3", correct: "3-methylbut-1-ene", wrongs: ["2-methylbut-3-ene", "3-methylbut-2-ene"] }
-    ];
+    for (let i = 0; i < 50; i++) {
+      // ด่านที่ 1: หาสายโซ่หลัก
+      let cLen = Math.floor(Math.random() * 6) + 5; 
+      STAGE_POOLS[0].push({
+        id: `s1_${i}`, stage: `ด่านที่ 1: หาสายโซ่หลัก`,
+        desc: `สุ่มโจทย์ #${i+1}: สารประกอบที่มีคาร์บอนต่อกันเป็นโซ่หลักยาวสุด ${cLen} อะตอม จะใช้ชื่อสายหลักว่าอะไร?`,
+        correct: `${ALKANES[cLen-1]} (${cLen} C)`,
+        wrongs: [`${ALKANES[cLen-2]} (${cLen-1} C)`, `${ALKANES[cLen]} (${cLen+1} C)`]
+      });
+
+      // ด่านที่ 2: เลือกทิศทางการนับ
+      let left = Math.floor(Math.random() * 3) + 2; 
+      let right = left + Math.floor(Math.random() * 3) + 1; 
+      let swap = Math.random() > 0.5;
+      let lPos = swap ? right : left; let rPos = swap ? left : right;
+      let ans2 = swap ? `นับจากขวา (เจอที่ C-${left})` : `นับจากซ้าย (เจอที่ C-${left})`;
+      let w2_1 = swap ? `นับจากซ้าย (เจอที่ C-${right})` : `นับจากขวา (เจอที่ C-${right})`;
+      STAGE_POOLS[1].push({
+        id: `s2_${i}`, stage: `ด่านที่ 2: เลือกทิศทางการนับ`,
+        desc: `สุ่มโจทย์ #${i+1}: หมู่เกาะอยู่ตำแหน่ง C-${lPos} (หากนับซ้ายไปขวา) และ C-${rPos} (หากนับขวาไปซ้าย) ควรนับจากฝั่งใด?`,
+        correct: ans2, wrongs: [w2_1, "นับจากฝั่งใดก็ได้ค่าเท่ากัน"]
+      });
+
+      // ด่านที่ 3: ระบุ พันธะคู่/พันธะสาม
+      let isDouble = Math.random() > 0.5;
+      STAGE_POOLS[2].push({
+        id: `s3_${i}`, stage: `ด่านที่ 3: ระบุพันธะคู่/พันธะสาม`,
+        desc: `สุ่มโจทย์ #${i+1}: สารไฮโดรคาร์บอนที่มีพันธะ${isDouble ? 'คู่ (C=C)' : 'สาม (C≡C)'} ในโมเลกุล จะลงท้ายชื่อด้วยเสียงใด?`,
+        correct: isDouble ? "แอลคีน (-ene)" : "แอลไคน์ (-yne)",
+        wrongs: [isDouble ? "แอลไคน์ (-yne)" : "แอลคีน (-ene)", "แอลเคน (-ane)"]
+      });
+
+      // ด่านที่ 4: ระบุ หมู่แทนที่
+      let numSub = Math.floor(Math.random() * 3) + 2; 
+      let alkylType = Math.floor(Math.random() * 3); 
+      STAGE_POOLS[3].push({
+        id: `s4_${i}`, stage: `ด่านที่ 4: ระบุหมู่แทนที่`,
+        desc: `สุ่มโจทย์ #${i+1}: หากในโครงสร้างมีหมู่ ${ALKYLS[alkylType]} เกาะซ้ำกันจำนวน ${numSub} ตำแหน่ง ต้องใช้คำนำหน้าหมู่แทนที่ว่าอะไร?`,
+        correct: `${THAI_NUM[numSub]}- (มี ${numSub} หมู่)`,
+        wrongs: [`${THAI_NUM[numSub-1]}- (มี ${numSub-1} หมู่)`, `${THAI_NUM[numSub+1]}- (มี ${numSub+1} หมู่)`]
+      });
+
+      // ด่านที่ 5: ตั้งชื่อ IUPAC แบบสมบูรณ์
+      let cCount = Math.floor(Math.random() * 4) + 5; 
+      let pos = Math.floor(Math.random() * 2) + 2;
+      STAGE_POOLS[4].push({
+        id: `s5_${i}`, stage: `ด่านที่ 5: ตั้งชื่อ IUPAC สรุป`,
+        desc: `สุ่มโจทย์ #${i+1}: แอลเคนสายหลักมี ${cCount} คาร์บอน และมีหมู่เมทิล (Methyl) 1 หมู่เกาะที่ตำแหน่ง C-${pos} สารนี้ชื่อว่าอะไร?`,
+        correct: `${pos}-methyl${ALKANES[cCount-1].toLowerCase()}`,
+        wrongs: [`${pos+1}-methyl${ALKANES[cCount-1].toLowerCase()}`, `${pos}-ethyl${ALKANES[cCount-2].toLowerCase()}`]
+      });
+    }
 
     const dom = {
-      video: document.getElementById('webcam-video'), canvasContainer: document.getElementById('canvas-container'), handDebugCanvas: document.getElementById('hand-debug-canvas'), labelsContainer: document.getElementById('labels-container'), scorePopup: document.getElementById('score-popup'), chargeGauge: document.getElementById('charge-gauge-container'), chargeGaugeFill: document.getElementById('charge-gauge-fill'), chargeGaugeText: document.getElementById('charge-gauge-text'), readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), hud: document.getElementById('hud'), hudScore: document.getElementById('hud-score'), hudTimer: document.getElementById('hud-timer'), hudQuestionIdx: document.getElementById('hud-question-idx'), hudHandStatus: document.getElementById('hud-hand-status'), questStage: document.getElementById('quest-stage'), questDesc: document.getElementById('quest-desc'), statusNotification: document.getElementById('status-notification'), welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), checkCamStatus: document.getElementById('check-cam-status'), checkAiStatus: document.getElementById('check-ai-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), btnSwapHand: document.getElementById('btn-swap-hand'), swapStatus: document.getElementById('swap-status'), btnToggleLandmarks: document.getElementById('btn-toggle-landmarks'), landmarksStatus: document.getElementById('landmarks-status'), btnToggleSound: document.getElementById('btn-toggle-sound'), soundStatus: document.getElementById('sound-status'), btnRestart: document.getElementById('btn-restart'), finalScoreVal: document.getElementById('final-score-val'),
+      video: document.getElementById('webcam-video'), canvasContainer: document.getElementById('canvas-container'), handDebugCanvas: document.getElementById('hand-debug-canvas'), labelsContainer: document.getElementById('labels-container'), scorePopup: document.getElementById('score-popup'), chargeGauge: document.getElementById('charge-gauge-container'), chargeGaugeFill: document.getElementById('charge-gauge-fill'), chargeGaugeText: document.getElementById('charge-gauge-text'), readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), 
+      hudTop: document.getElementById('hud-top'), sideControls: document.getElementById('side-controls'), minimalHud: document.getElementById('minimal-hud'), minimalQNum: document.getElementById('minimal-q-num'), hudScore: document.getElementById('hud-score'),
+      welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), checkCamStatus: document.getElementById('check-cam-status'), checkAiStatus: document.getElementById('check-ai-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), btnSwapHand: document.getElementById('btn-swap-hand'), swapStatus: document.getElementById('swap-status'), btnToggleLandmarks: document.getElementById('btn-toggle-landmarks'), landmarksStatus: document.getElementById('landmarks-status'), btnToggleSound: document.getElementById('btn-toggle-sound'), soundStatus: document.getElementById('sound-status'), finalScoreVal: document.getElementById('final-score-val'),
       inputPlayerName: document.getElementById('input-player-name'), hudPlayerNameDisplay: document.getElementById('hud-player-name-display'), finalPlayerName: document.getElementById('final-player-name'), saveDataStatus: document.getElementById('save-data-status')
     };
 
-    const state = { playerName: "", score: 0, questionIndex: 0, totalQuestions: 15, isGameRunning: false, isReading: false, startTime: 0, soundEnabled: true, swapHands: false, showLandmarks: false, camReady: false, aiReady: false, leftHand: null, rightHand: null, lastRightGripTime: 0, pullPower: 0, isPulling: false, lastValidPullPower: 0, activeFruits: [], activeArrows: [], stageCleared: false };
+    const state = { 
+      playerName: "", score: 0, 
+      currentStage: 0, // 0 to 4
+      correctInStage: 0, // 0 to 3
+      targetPerStage: 3, // Requires 3 correct to pass stage
+      usedQuestionIds: new Set(),
+      
+      isGameRunning: false, isReading: false, soundEnabled: true, swapHands: false, showLandmarks: false, camReady: false, aiReady: false, leftHand: null, rightHand: null, lastRightGripTime: 0, pullPower: 0, isPulling: false, lastValidPullPower: 0, activeFruits: [], activePotions: [], particles: [] 
+    };
 
     /* ==========================================================================
-       SOUND ENGINE (Web Audio API)
+       SOUND ENGINE
        ========================================================================== */
     class SoundEngine {
       constructor() { this.ctx = null; this.tensionOsc = null; this.tensionGain = null; }
@@ -249,43 +273,45 @@
         if (!state.soundEnabled || !this.ctx) return;
         const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
         osc.type = type; osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(); osc.stop(this.ctx.currentTime + duration);
+        gain.gain.setValueAtTime(gainVal, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
       }
       btnClick() { this.playTone(600, 'triangle', 0.08, 0.25); }
       countdownBeep() { this.playTone(440, 'sine', 0.15, 0.3); }
       goBeep() { this.playTone(880, 'triangle', 0.3, 0.4); }     
       ready() { this.playTone(523.25, 'sine', 0.12, 0.2); setTimeout(() => this.playTone(659.25, 'sine', 0.18, 0.2), 120); }
       gameStart() { [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => { setTimeout(() => this.playTone(f, 'triangle', 0.2, 0.25), idx * 100); }); }
-      startTension() {
+      startTension() { 
         if (!state.soundEnabled || !this.ctx || this.tensionOsc) return;
         this.tensionOsc = this.ctx.createOscillator(); this.tensionGain = this.ctx.createGain();
-        this.tensionOsc.type = 'sawtooth'; this.tensionOsc.frequency.setValueAtTime(110, this.ctx.currentTime);
+        this.tensionOsc.type = 'sine'; this.tensionOsc.frequency.setValueAtTime(150, this.ctx.currentTime);
         this.tensionGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
         this.tensionOsc.connect(this.tensionGain); this.tensionGain.connect(this.ctx.destination); this.tensionOsc.start();
       }
       updateTension(ratio) {
         if (!this.tensionOsc || !this.ctx) return;
-        const freq = 110 + ratio * 280;
-        this.tensionOsc.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.05);
-        this.tensionGain.gain.setTargetAtTime(0.02 + ratio * 0.08, this.ctx.currentTime, 0.05);
+        this.tensionOsc.frequency.setTargetAtTime(150 + ratio * 150, this.ctx.currentTime, 0.05);
+        this.tensionGain.gain.setTargetAtTime(0.05 + ratio * 0.1, this.ctx.currentTime, 0.05);
       }
-      stopTension() {
-        if (this.tensionOsc) {
-          try { this.tensionGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03); setTimeout(() => { if (this.tensionOsc) { this.tensionOsc.stop(); this.tensionOsc.disconnect(); this.tensionOsc = null; } }, 50); } catch(e) {}
-        }
-      }
-      shoot(power) {
+      stopTension() { if (this.tensionOsc) { try { this.tensionGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03); setTimeout(() => { if (this.tensionOsc) { this.tensionOsc.stop(); this.tensionOsc.disconnect(); this.tensionOsc = null; } }, 50); } catch(e) {} } }
+      shoot(power) { 
         if (!state.soundEnabled || !this.ctx) return; this.stopTension();
         const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'triangle'; osc.frequency.setValueAtTime(450 * power + 150, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(80, this.ctx.currentTime + 0.18);
-        gain.gain.setValueAtTime(0.35, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.18);
-        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.2);
+        osc.type = 'triangle'; osc.frequency.setValueAtTime(300 * power + 100, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(50, this.ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.25);
       }
-      hitCorrect() { if (!state.soundEnabled || !this.ctx) return; [587.33, 880, 1174.66].forEach((f, i) => { setTimeout(() => this.playTone(f, 'sine', 0.25, 0.25), i * 80); }); }
+      splashSound() { 
+        if (!state.soundEnabled || !this.ctx) return;
+        const bSize = this.ctx.sampleRate * 0.15; const b = this.ctx.createBuffer(1, bSize, this.ctx.sampleRate);
+        const data = b.getChannelData(0); for (let i=0; i<bSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource(); noise.buffer = b;
+        const filter = this.ctx.createBiquadFilter(); filter.type = 'highpass'; filter.frequency.value = 800;
+        const gain = this.ctx.createGain(); gain.gain.setValueAtTime(0.4, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination); noise.start();
+        [800, 1200].forEach((f, i) => { setTimeout(() => this.playTone(f, 'sine', 0.1, 0.2), i*30); });
+      }
       hitWrong() {
         if (!state.soundEnabled || !this.ctx) return;
         const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
@@ -293,22 +319,14 @@
         gain.gain.setValueAtTime(0.3, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.3);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.32);
       }
-      hitBorder() { this.playTone(180, 'triangle', 0.15, 0.25); }
-      missDrop() {
-        if (!state.soundEnabled || !this.ctx) return;
-        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(320, this.ctx.currentTime); osc.frequency.linearRampToValueAtTime(100, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.35);
-        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.36);
-      }
       finishGame() { [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, i) => { setTimeout(() => this.playTone(f, 'triangle', 0.4, 0.3), i * 140); }); }
     }
     const sound = new SoundEngine();
 
     /* ==========================================================================
-       THREE.JS SETUP
+       THREE.JS SETUP (Potion Throwing Mechanics)
        ========================================================================== */
-    let scene, camera, renderer, bowGroup, bowUpperLimb, bowLowerLimb, bowStringLine, previewArrow;
+    let scene, camera, renderer, aimGroup, rightHandGroup, previewPotion;
     const viewWidth = window.innerWidth; const viewHeight = window.innerHeight;
     function initThree() {
       scene = new THREE.Scene();
@@ -317,57 +335,118 @@
       renderer.setSize(viewWidth, viewHeight); renderer.setPixelRatio(window.devicePixelRatio);
       dom.canvasContainer.appendChild(renderer.domElement);
       scene.add(new THREE.AmbientLight(0xffffff, 0.9)); const dirLight = new THREE.DirectionalLight(0xffffff, 0.6); dirLight.position.set(0, 200, 300); scene.add(dirLight);
-      createRealisticBow();
+      
+      aimGroup = new THREE.Group();
+      const ringGeo = new THREE.TorusGeometry(20, 3, 16, 32);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.7 });
+      aimGroup.add(new THREE.Mesh(ringGeo, ringMat));
+      scene.add(aimGroup);
+
+      rightHandGroup = new THREE.Group();
+      previewPotion = createPotionMesh(0xa855f7); 
+      previewPotion.visible = false;
+      rightHandGroup.add(previewPotion);
+      scene.add(rightHandGroup);
     }
-    function createRealisticBow() {
-      bowGroup = new THREE.Group(); const bowMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.6 });
-      bowGroup.add(new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 80, 16), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 })));
-      const upCurve = new THREE.CubicBezierCurve3(new THREE.Vector3(0,40,0), new THREE.Vector3(-45,120,0), new THREE.Vector3(-15,200,0), new THREE.Vector3(25,250,0));
-      bowGroup.add(new THREE.Mesh(new THREE.TubeGeometry(upCurve, 20, 6, 8, false), bowMat));
-      const loCurve = new THREE.CubicBezierCurve3(new THREE.Vector3(0,-40,0), new THREE.Vector3(-45,-120,0), new THREE.Vector3(-15,-200,0), new THREE.Vector3(25,-250,0));
-      bowGroup.add(new THREE.Mesh(new THREE.TubeGeometry(loCurve, 20, 6, 8, false), bowMat));
-      const strGeo = new THREE.BufferGeometry(); strGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array([25,250,0, 0,0,0, 25,-250,0]), 3));
-      bowStringLine = new THREE.Line(strGeo, new THREE.LineBasicMaterial({ color: 0xffffff, linewidth: 2 })); bowGroup.add(bowStringLine);
-      previewArrow = createArrowMesh(); previewArrow.visible = false; bowGroup.add(previewArrow);
-      bowGroup.position.set(viewWidth * 0.25, 0, 0); scene.add(bowGroup);
-    }
-    function createArrowMesh() {
+    
+    function createPotionMesh(liquidColor = 0xa855f7) {
       const g = new THREE.Group();
-      const shaft = new THREE.Mesh(new THREE.CylinderGeometry(3,3,160,12), new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.4 })); shaft.rotation.z = Math.PI/2; g.add(shaft);
-      const head = new THREE.Mesh(new THREE.ConeGeometry(8,25,12), new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: 0.8 })); head.rotation.z = -Math.PI/2; head.position.x = -85; g.add(head);
-      const fMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
-      for (let i=0; i<3; i++) { const f = new THREE.Mesh(new THREE.BoxGeometry(25,2,8), fMat); f.position.x = 70; f.rotation.x = (i*Math.PI*2)/3; g.add(f); }
-      return g;
-    }
-    function createFruitMesh(idx) {
-      const g = new THREE.Group();
-      if (idx===0) g.add(new THREE.Mesh(new THREE.SphereGeometry(32,20,20), new THREE.MeshStandardMaterial({ color: 0xf97316 })));
-      else if (idx===1) g.add(new THREE.Mesh(new THREE.SphereGeometry(30,20,20), new THREE.MeshStandardMaterial({ color: 0xef4444 })));
-      else g.add(new THREE.Mesh(new THREE.DodecahedronGeometry(28), new THREE.MeshStandardMaterial({ color: 0x84cc16 })));
-      const stem = new THREE.Mesh(new THREE.CylinderGeometry(2,3,14,8), new THREE.MeshStandardMaterial({ color: 0x475569 })); stem.position.y = 32; g.add(stem);
+      const glassMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.4, roughness: 0.1 });
+      const base = new THREE.Mesh(new THREE.SphereGeometry(18, 16, 16), glassMat); g.add(base);
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(6, 8, 20, 16), glassMat); neck.position.y = 18; g.add(neck);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(7, 2, 8, 16), glassMat); rim.position.y = 28; rim.rotation.x = Math.PI/2; g.add(rim);
+      const liqMat = new THREE.MeshStandardMaterial({ color: liquidColor, roughness: 0.3, emissive: liquidColor, emissiveIntensity: 0.4 });
+      const liquid = new THREE.Mesh(new THREE.SphereGeometry(15, 16, 16), liqMat); g.add(liquid);
+      const corkMat = new THREE.MeshStandardMaterial({ color: 0x854d0e, roughness: 0.9 });
+      const cork = new THREE.Mesh(new THREE.CylinderGeometry(5, 4, 8, 12), corkMat); cork.position.y = 30; g.add(cork);
+      g.rotation.z = -Math.PI/2; 
       return g;
     }
 
+    function createFruitMesh(idx) {
+      const g = new THREE.Group();
+      let c = idx===0 ? 0xf97316 : (idx===1 ? 0xef4444 : 0x84cc16);
+      const mat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.3 });
+      if (idx===0) g.add(new THREE.Mesh(new THREE.SphereGeometry(32,20,20), mat));
+      else if (idx===1) g.add(new THREE.Mesh(new THREE.DodecahedronGeometry(28), mat));
+      else g.add(new THREE.Mesh(new THREE.IcosahedronGeometry(28, 1), mat));
+      return g;
+    }
+
+    function createSplash(x, y, colorHex) {
+      const pMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.8 });
+      for(let i=0; i<8; i++) {
+        const p = new THREE.Mesh(new THREE.SphereGeometry(Math.random()*6+4, 8, 8), pMat);
+        p.position.set(x, y, 0);
+        const ang = Math.random() * Math.PI * 2; const spd = Math.random() * 8 + 4;
+        scene.add(p);
+        state.particles.push({ mesh: p, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: 1.0 });
+      }
+    }
+    
+    function updateParticles() {
+      for(let i = state.particles.length-1; i>=0; i--) {
+        let p = state.particles[i]; p.vy -= 0.5;
+        p.mesh.position.x += p.vx; p.mesh.position.y += p.vy;
+        p.life -= 0.03; p.mesh.scale.setScalar(Math.max(0, p.life));
+        p.mesh.material.opacity = p.life;
+        if(p.life <= 0) { scene.remove(p.mesh); state.particles.splice(i, 1); }
+      }
+    }
+
     /* ==========================================================================
-       GAME LOGIC & READ PHASE
+       GAME LOGIC & READ PHASE (NON-REPEATING, NO-ADVANCE ON FAIL)
        ========================================================================== */
-    function spawnQuestionRound(qIdx) {
+    function spawnQuestionRound() {
       clearAllFruits();
-      if (qIdx >= state.totalQuestions) { endGame(); return; }
-      state.stageCleared = false; const qData = CHEMISTRY_QUESTIONS[qIdx];
-      dom.questStage.innerText = qData.stage; dom.questDesc.innerText = qData.desc; dom.hudQuestionIdx.innerText = `${qIdx + 1}/${state.totalQuestions}`;
-      updateNotification("โปรดอ่านโจทย์ให้เข้าใจก่อนเริ่มยิง...");
-      state.isReading = true; dom.readingStage.innerText = qData.stage; dom.readingDesc.innerText = qData.desc; dom.readingOverlay.style.display = 'flex';
+      
+      if (state.currentStage >= 5) { endGame(); return; }
+      
+      let pool = STAGE_POOLS[state.currentStage];
+      // Filter out used questions to prevent repeats
+      let availableQuestions = pool.filter(q => !state.usedQuestionIds.has(q.id));
+      
+      // Fallback: If exhausted all 50 questions in a stage (unlikely), reset used list for this stage
+      if (availableQuestions.length === 0) {
+        pool.forEach(q => state.usedQuestionIds.delete(q.id));
+        availableQuestions = pool;
+      }
+      
+      // Randomly select
+      let randIdx = Math.floor(Math.random() * availableQuestions.length);
+      let qData = availableQuestions[randIdx];
+      state.usedQuestionIds.add(qData.id); // Mark as used
+      
+      dom.readingStage.innerText = `ด่านที่ ${state.currentStage + 1} (ผ่านแล้ว ${state.correctInStage}/${state.targetPerStage})`; 
+      dom.readingDesc.innerText = qData.desc; 
+      
+      dom.hudTop.style.display = 'flex';
+      dom.sideControls.style.display = 'flex';
+      dom.minimalHud.style.display = 'none';
+
+      state.isReading = true; dom.readingOverlay.style.display = 'flex';
       let count = 3; dom.readingTimer.innerText = count; sound.countdownBeep();
+      
       const iv = setInterval(() => {
         count--;
         if (count > 0) { dom.readingTimer.innerText = count; sound.countdownBeep(); }
         else {
-          clearInterval(iv); dom.readingTimer.innerText = "เริ่มยิง!"; sound.goBeep();
-          setTimeout(() => { dom.readingOverlay.style.display = 'none'; state.isReading = false; updateNotification("เล็งและยิงคำตอบที่ถูกต้อง!"); spawnFruitsToScene(qData); }, 500);
+          clearInterval(iv); dom.readingTimer.innerText = "เริ่มปา!"; sound.goBeep();
+          setTimeout(() => { 
+            dom.readingOverlay.style.display = 'none'; 
+            state.isReading = false; 
+            
+            dom.hudTop.style.display = 'none';
+            dom.sideControls.style.display = 'none';
+            dom.minimalHud.style.display = 'block';
+            dom.minimalQNum.innerText = `ด่านที่ ${state.currentStage + 1} | ข้อ ${state.correctInStage + 1}/${state.targetPerStage}`;
+
+            spawnFruitsToScene(qData); 
+          }, 500);
         }
       }, 1000);
     }
+    
     function spawnFruitsToScene(qData) {
       const items = [{ text: qData.correct, isCorrect: true }, { text: qData.wrongs[0], isCorrect: false }, { text: qData.wrongs[1], isCorrect: false }];
       for (let i=2; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [items[i], items[j]] = [items[j], items[i]]; }
@@ -375,70 +454,97 @@
       items.forEach((item, i) => {
         const fm = createFruitMesh(i); fm.position.set(-viewWidth/2 + (i+0.5)*laneW + 20, viewHeight/2 + 60 + i*110, 0); scene.add(fm);
         const lbl = document.createElement('div'); lbl.className = 'fruit-label'; lbl.innerText = item.text; dom.labelsContainer.appendChild(lbl);
-        state.activeFruits.push({ mesh: fm, labelEl: lbl, isCorrect: item.isCorrect, text: item.text, speed: 1.2 + Math.random()*0.5, hitByArrow: false, isDead: false });
+        state.activeFruits.push({ mesh: fm, labelEl: lbl, isCorrect: item.isCorrect, text: item.text, speed: 1.2 + Math.random()*0.5, isDead: false });
       });
     }
+    
     function clearAllFruits() { state.activeFruits.forEach(f => { scene.remove(f.mesh); if (f.labelEl.parentNode) f.labelEl.parentNode.removeChild(f.labelEl); }); state.activeFruits = []; }
     
-    function shootCurrentArrow(p) {
-      if (p < 0.15) { updateNotification("แรงดึงน้อยเกินไป!"); sound.missDrop(); return; }
-      sound.shoot(p); const a = createArrowMesh(); a.position.copy(bowGroup.position); a.rotation.copy(bowGroup.rotation);
-      const spd = 26 * p + 8; const ang = bowGroup.rotation.z + Math.PI;
-      scene.add(a); state.activeArrows.push({ mesh: a, vel: new THREE.Vector3(Math.cos(ang)*spd, Math.sin(ang)*spd, 0), gravity: 0.35*(1.1-p*0.5), pinned: false, fadeTimer: 0, pinnedFruit: null });
-      updateNotification(`ยิงออกไป! แรง ${Math.round(p*100)}%`);
+    function throwPotion(p) {
+      if (p < 0.15) return; 
+      sound.shoot(p); 
+      const pot = createPotionMesh(0xa855f7); pot.position.copy(rightHandGroup.position); 
+      
+      const aimDx = aimGroup.position.x - rightHandGroup.position.x;
+      const aimDy = aimGroup.position.y - rightHandGroup.position.y;
+      const ang = Math.atan2(aimDy, aimDx);
+      const spd = 35 * p + 15; 
+      
+      scene.add(pot); 
+      state.activePotions.push({ mesh: pot, vel: new THREE.Vector3(Math.cos(ang)*spd, Math.sin(ang)*spd, 0), gravity: 0.5 });
     }
-    function updateArrows() {
-      for (let i = state.activeArrows.length - 1; i >= 0; i--) {
-        const a = state.activeArrows[i];
-        if (!a.pinned) {
-          a.vel.y -= a.gravity; a.mesh.position.add(a.vel); a.mesh.rotation.z = Math.atan2(a.vel.y, a.vel.x);
-          for (let f of state.activeFruits) {
-            if (!f.hitByArrow && !f.isDead && a.mesh.position.distanceTo(f.mesh.position) < 45) {
-              a.pinned = true; a.pinnedFruit = f; f.hitByArrow = true;
-              if (f.isCorrect) { addScore(10); showPopup("+10 ถูกต้อง!", 'score-add'); updateNotification(`ถูกต้อง! ${f.text}`); sound.hitCorrect(); state.stageCleared = true; }
-              else { addScore(-5); showPopup("-5 คำหลอก!", 'score-sub'); updateNotification(`ตอบผิด!`); sound.hitWrong(); }
-              break;
+    
+    function updatePotions() {
+      for (let i = state.activePotions.length - 1; i >= 0; i--) {
+        const a = state.activePotions[i];
+        a.vel.y -= a.gravity; a.mesh.position.add(a.vel); 
+        a.mesh.rotation.z = Math.atan2(a.vel.y, a.vel.x) - Math.PI/2;
+
+        let hit = false;
+        for (let j = state.activeFruits.length -1; j >= 0; j--) {
+          let f = state.activeFruits[j];
+          if (!f.isDead && a.mesh.position.distanceTo(f.mesh.position) < 45) {
+            hit = true; f.isDead = true;
+            createSplash(f.mesh.position.x, f.mesh.position.y, f.isCorrect ? 0x4ade80 : 0xf87171);
+            scene.remove(f.mesh); if (f.labelEl.parentNode) f.labelEl.parentNode.removeChild(f.labelEl);
+            state.activeFruits.splice(j, 1);
+            
+            if (f.isCorrect) { 
+              addScore(10); showPopup("+10 ถูกต้อง!", 'score-add'); sound.splashSound(); 
+              
+              // Increment correct count
+              state.correctInStage++;
+              if (state.correctInStage >= state.targetPerStage) {
+                state.currentStage++; // Advance Stage
+                state.correctInStage = 0;
+              }
+              setTimeout(() => spawnQuestionRound(), 800);
             }
+            else { 
+              addScore(-5); showPopup("-5 คำหลอก!", 'score-sub'); sound.hitWrong(); 
+              // DO NOT increment correct count. Keep in same stage. Spawn a new random question.
+              setTimeout(() => spawnQuestionRound(), 800);
+            }
+            break;
           }
-          if (a.mesh.position.x <= -viewWidth/2 || a.mesh.position.x >= viewWidth/2 || a.mesh.position.y <= -viewHeight/2 || a.mesh.position.y >= viewHeight/2) { a.pinned = true; sound.hitBorder(); }
-        } else {
-          a.fadeTimer += 0.016; if (a.pinnedFruit) a.pinnedFruit.mesh.position.copy(a.mesh.position);
-          if (a.fadeTimer >= 1.0) {
-            scene.remove(a.mesh); if (a.pinnedFruit) { scene.remove(a.pinnedFruit.mesh); if (a.pinnedFruit.labelEl.parentNode) a.pinnedFruit.labelEl.parentNode.removeChild(a.pinnedFruit.labelEl); a.pinnedFruit.isDead = true; }
-            state.activeArrows.splice(i, 1); if (a.pinnedFruit && a.pinnedFruit.isCorrect) { state.questionIndex++; setTimeout(() => spawnQuestionRound(state.questionIndex), 400); }
-          }
+        }
+        
+        if (hit || a.mesh.position.x <= -viewWidth/2 || a.mesh.position.x >= viewWidth/2 || a.mesh.position.y <= -viewHeight/2) { 
+          if(!hit && a.mesh.position.y <= -viewHeight/2) createSplash(a.mesh.position.x, a.mesh.position.y, 0xa855f7);
+          scene.remove(a.mesh); state.activePotions.splice(i, 1); 
         }
       }
     }
+    
     function updateFruits() {
       state.activeFruits.forEach(f => {
-        if (!f.hitByArrow && !f.isDead) {
-          f.mesh.position.y -= f.speed; f.mesh.rotation.y += 0.015;
+        if (!f.isDead) {
+          f.mesh.position.y -= f.speed; f.mesh.rotation.y += 0.015; f.mesh.rotation.z += 0.01;
           const p = f.mesh.position.clone(); p.project(camera);
           f.labelEl.style.left = `${(p.x*0.5+0.5)*window.innerWidth}px`; f.labelEl.style.top = `${(-(p.y*0.5)+0.5)*window.innerHeight - 35}px`;
+          
           if (f.mesh.position.y < -viewHeight/2 - 40) {
             f.isDead = true; scene.remove(f.mesh); if (f.labelEl.parentNode) f.labelEl.parentNode.removeChild(f.labelEl);
-            if (f.isCorrect && !state.stageCleared) { addScore(-5); showPopup("-5 คำตอบตกพื้น!", 'score-sub'); updateNotification("คำตอบตกพื้น!"); sound.missDrop(); state.questionIndex++; setTimeout(() => spawnQuestionRound(state.questionIndex), 800); }
+            if (f.isCorrect) { 
+              addScore(-5); showPopup("-5 คำตอบตกพื้น!", 'score-sub'); 
+              // Dropped correct answer = wrong. Same logic: do not advance, spawn new random question.
+              setTimeout(() => spawnQuestionRound(), 800); 
+            }
           }
         }
       });
     }
+    
     function addScore(d) { state.score = Math.max(0, state.score + d); dom.hudScore.innerText = state.score; }
     function showPopup(t, c) { dom.scorePopup.innerText = t; dom.scorePopup.className = `show ${c}`; setTimeout(() => dom.scorePopup.className = '', 1000); }
-    function updateNotification(m) { dom.statusNotification.innerText = m; }
 
     /* ==========================================================================
        AI HAND TRACKING
        ========================================================================== */
     function checkSetupReady() {
       const hasName = dom.inputPlayerName.value.trim().length > 0;
-      if (state.camReady && state.aiReady && hasName) {
-        dom.btnStartGame.disabled = false; dom.btnStartGame.innerText = "เริ่มเกมทันที";
-      } else {
-        dom.btnStartGame.disabled = true;
-        if (!state.camReady || !state.aiReady) dom.btnStartGame.innerText = "กำลังเตรียมระบบ...";
-        else dom.btnStartGame.innerText = "กรุณากรอกชื่อก่อนเริ่มเกม";
-      }
+      if (state.camReady && state.aiReady && hasName) { dom.btnStartGame.disabled = false; dom.btnStartGame.innerText = "เริ่มเกมทันที"; } 
+      else { dom.btnStartGame.disabled = true; if (!state.camReady || !state.aiReady) dom.btnStartGame.innerText = "กำลังเตรียมระบบ..."; else dom.btnStartGame.innerText = "กรุณากรอกชื่อก่อนเริ่มเกม"; }
     }
     dom.inputPlayerName.addEventListener('input', checkSetupReady);
 
@@ -450,6 +556,7 @@
         state.camReady = true; dom.checkCamStatus.innerHTML = '<span class="badge-ok">✓ สำเร็จ</span>'; checkSetupReady();
       }).catch(() => { dom.checkCamStatus.innerHTML = '<span style="color:#ef4444;">✕ กล้องไม่พร้อม</span>'; });
     }
+    
     function onHandResults(results) {
       if (!state.aiReady) { state.aiReady = true; dom.checkAiStatus.innerHTML = '<span class="badge-ok">✓ สำเร็จ</span>'; checkSetupReady(); sound.ready(); }
       const ctx = dom.handDebugCanvas.getContext('2d'); dom.handDebugCanvas.width = window.innerWidth; dom.handDebugCanvas.height = window.innerHeight; ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
@@ -458,118 +565,91 @@
         for (let i=0; i<results.multiHandLandmarks.length; i++) {
           const lms = results.multiHandLandmarks[i]; const isL = (results.multiHandedness[i].label === 'Right') !== state.swapHands;
           if (isL) left = lms; else right = lms;
-          if (state.showLandmarks) { ctx.fillStyle = isL ? '#38bdf8' : '#4ade80'; lms.forEach(pt => { ctx.beginPath(); ctx.arc((1-pt.x)*window.innerWidth, pt.y*window.innerHeight, 5, 0, 2*Math.PI); ctx.fill(); }); }
+          if (state.showLandmarks) { ctx.fillStyle = isL ? '#38bdf8' : '#a855f7'; lms.forEach(pt => { ctx.beginPath(); ctx.arc((1-pt.x)*window.innerWidth, pt.y*window.innerHeight, 5, 0, 2*Math.PI); ctx.fill(); }); }
         }
       }
       processHands(left, right);
     }
+    
     function processHands(lLms, rLms) {
-      if (lLms) {
-        let bx = (1-lLms[9].x)*viewWidth - viewWidth/2; if (bx < 20) bx = 20;
-        bowGroup.position.set(bx, -(lLms[9].y*viewHeight - viewHeight/2), 0);
-        state.leftHand = { x: bx, y: bowGroup.position.y };
+      if (lLms) { 
+        aimGroup.position.set((1-lLms[9].x)*viewWidth - viewWidth/2, -(lLms[9].y*viewHeight - viewHeight/2), 0);
+        state.leftHand = { x: aimGroup.position.x, y: aimGroup.position.y };
+        aimGroup.rotation.z += 0.05; 
       }
-      if (rLms && state.leftHand) {
+      if (rLms && state.leftHand) { 
         const rawX = (1-rLms[9].x)*viewWidth, rawY = rLms[9].y*viewHeight;
         const hX = rawX - viewWidth/2, hY = -(rawY - viewHeight/2);
+        
         let closed = 0; [8,12,16,20].forEach((t,i) => { if (rLms[t].y > rLms[[5,9,13,17][i]].y) closed++; });
         const ges = closed>=3 ? 'FIST' : (closed<=1 ? 'OPEN' : 'HALF');
-        dom.hudHandStatus.innerText = `มือซ้าย: เจอ | มือขวา: ${ges==='FIST'?'กำมือ':(ges==='OPEN'?'แบมือ':'กึ่งแบ')}`;
         
-        const dx = state.leftHand.x - hX, dy = state.leftHand.y - hY; bowGroup.rotation.z = Math.atan2(dy, dx) - Math.PI;
-        if (ges === 'FIST') {
+        if (ges === 'FIST') { 
           state.isPulling = true; state.lastRightGripTime = Date.now();
-          state.pullPower = state.lastValidPullPower = THREE.MathUtils.clamp((Math.hypot(dx, dy)-35)/(220-35), 0, 1);
+          rightHandGroup.position.set(hX, hY, 0); previewPotion.visible = true;
+          
+          const dx = state.leftHand.x - hX, dy = state.leftHand.y - hY;
+          previewPotion.rotation.z = Math.atan2(dy, dx) - Math.PI/2;
+          
+          state.pullPower = state.lastValidPullPower = THREE.MathUtils.clamp((Math.hypot(dx, dy)-50)/250, 0, 1);
           sound.startTension(); sound.updateTension(state.pullPower);
-          updateString(hX, hY, true); dom.chargeGauge.style.display = 'flex'; dom.chargeGauge.style.left = `${rawX+35}px`; dom.chargeGauge.style.top = `${rawY-90}px`;
+          
+          dom.chargeGauge.style.display = 'flex'; dom.chargeGauge.style.left = `${rawX+40}px`; dom.chargeGauge.style.top = `${rawY-60}px`;
           dom.chargeGaugeFill.style.height = `${Math.round(state.pullPower*100)}%`; dom.chargeGaugeText.innerText = `${Math.round(state.pullPower*100)}%`;
-        } else if (ges === 'OPEN') {
-          if (state.isPulling) { if (!state.isReading) shootCurrentArrow(state.lastValidPullPower); else updateNotification("รออ่านโจทย์จบก่อน!"); resetPull(); }
-        } else { if (state.isPulling) updateString(hX, hY, true); }
+        } else if (ges === 'OPEN') { 
+          if (state.isPulling) { if (!state.isReading) throwPotion(state.lastValidPullPower); resetPull(); }
+        } else { if (state.isPulling) { rightHandGroup.position.set(hX, hY, 0); } } 
       } else { if (state.isPulling && Date.now() - state.lastRightGripTime > 300) resetPull(); }
     }
-    function resetPull() { state.isPulling = false; sound.stopTension(); updateString(0,0,false); dom.chargeGauge.style.display = 'none'; }
-    function updateString(hx, hy, pulled) {
-      const p = bowStringLine.geometry.attributes.position.array;
-      if (pulled) { const loc = bowGroup.worldToLocal(new THREE.Vector3(hx, hy, 0)); p[3]=loc.x; p[4]=loc.y; previewArrow.visible = true; previewArrow.position.set(loc.x+80, loc.y, 0); }
-      else { p[3]=0; p[4]=0; previewArrow.visible = false; }
-      bowStringLine.geometry.attributes.position.needsUpdate = true;
-    }
+    
+    function resetPull() { state.isPulling = false; sound.stopTension(); previewPotion.visible = false; dom.chargeGauge.style.display = 'none'; }
 
     /* ==========================================================================
        GAME FLOW & REAL-TIME DATA SENDING
        ========================================================================== */
     async function sendDataToTeacher(statusText = "กำลังเล่น") {
-      if (!GAS_URL) {
-        if (statusText === "จบเกม") dom.saveDataStatus.innerHTML = "<span style='color:#fbbf24'>ไม่ได้บันทึกคะแนน (ไม่ได้ตั้งค่า URL ของระบบ)</span>";
-        return;
-      }
+      if (!GAS_URL) { if (statusText === "จบเกม") dom.saveDataStatus.innerHTML = "<span style='color:#fbbf24'>ไม่ได้บันทึกคะแนน (ไม่ได้ตั้งค่า URL ของระบบ)</span>"; return; }
       try {
-        const formData = new FormData();
-        formData.append("name", state.playerName);
-        formData.append("score", state.score);
-        formData.append("status", statusText);
-
-        // POST ข้อมูลไปยังเซิร์ฟเวอร์
+        const formData = new FormData(); formData.append("name", state.playerName); formData.append("score", state.score); formData.append("status", statusText);
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: formData });
-        
-        if (statusText === "จบเกม") {
-          dom.saveDataStatus.innerHTML = "<span style='color:#4ade80'>✓ บันทึกคะแนนสุดท้ายสำเร็จ!</span>";
-        }
-      } catch (error) {
-        if (statusText === "จบเกม") {
-          dom.saveDataStatus.innerHTML = "<span style='color:#ef4444'>✕ เกิดข้อผิดพลาดในการเชื่อมต่อ</span>";
-        }
-      }
+        if (statusText === "จบเกม") dom.saveDataStatus.innerHTML = "<span style='color:#4ade80'>✓ บันทึกคะแนนสุดท้ายสำเร็จ!</span>";
+      } catch (error) { if (statusText === "จบเกม") dom.saveDataStatus.innerHTML = "<span style='color:#ef4444'>✕ เกิดข้อผิดพลาดในการเชื่อมต่อ</span>"; }
     }
 
     function startGame() {
       state.playerName = dom.inputPlayerName.value.trim() || "ไม่ระบุชื่อ";
-      dom.hudPlayerNameDisplay.innerText = state.playerName;
-      dom.finalPlayerName.innerText = state.playerName;
+      dom.hudPlayerNameDisplay.innerText = state.playerName; dom.finalPlayerName.innerText = state.playerName;
       
       sound.init(); sound.gameStart();
-      dom.welcomeScreen.style.display = 'none'; dom.endScreen.style.display = 'none'; dom.hud.style.display = 'block';
-      state.score = 0; state.questionIndex = 0; state.isGameRunning = true; state.startTime = Date.now(); dom.hudScore.innerText = "0";
+      dom.welcomeScreen.style.display = 'none'; dom.endScreen.style.display = 'none'; 
       
-      // ส่งข้อมูลตอนเริ่ม และวนส่งคะแนนอัปเดตทุก 5 วินาที
+      state.score = 0; state.currentStage = 0; state.correctInStage = 0; state.usedQuestionIds.clear();
+      state.isGameRunning = true; dom.hudScore.innerText = "0";
+      
       sendDataToTeacher("กำลังเล่น");
       if (syncInterval) clearInterval(syncInterval);
-      syncInterval = setInterval(() => {
-        if (state.isGameRunning) sendDataToTeacher("กำลังเล่น");
-      }, 5000);
-
-      spawnQuestionRound(0);
+      syncInterval = setInterval(() => { if (state.isGameRunning) sendDataToTeacher("กำลังเล่น"); }, 5000);
+      
+      spawnQuestionRound();
     }
     
     function endGame() {
       state.isGameRunning = false; sound.finishGame();
-      
-      // หยุดการส่งข้อมูลแบบลูป และส่งสถานะ จบเกม ครั้งสุดท้าย
       if (syncInterval) clearInterval(syncInterval);
       
-      dom.hud.style.display = 'none'; dom.endScreen.style.display = 'flex'; dom.finalScoreVal.innerText = state.score;
+      dom.hudTop.style.display = 'none'; dom.sideControls.style.display = 'none'; dom.minimalHud.style.display = 'none';
+      dom.endScreen.style.display = 'flex'; dom.finalScoreVal.innerText = state.score;
       dom.saveDataStatus.innerHTML = "กำลังสรุปผลส่งให้คุณครู... <div class='spinner' style='display:inline-block; vertical-align:middle; width:16px; height:16px; border-width:2px;'></div>";
-      
       sendDataToTeacher("จบเกม");
     }
 
     function gameLoop() {
       requestAnimationFrame(gameLoop);
-      if (state.isGameRunning) {
-        updateFruits(); updateArrows();
-        const t = Math.floor((Date.now() - state.startTime)/1000);
-        dom.hudTimer.innerText = `${String(Math.floor(t/60)).padStart(2,'0')}:${String(t%60).padStart(2,'0')}`;
-      }
+      if (state.isGameRunning) { updateFruits(); updatePotions(); updateParticles(); }
       renderer.render(scene, camera);
     }
 
     dom.btnStartGame.addEventListener('click', startGame); dom.btnPlayAgain.addEventListener('click', () => { dom.endScreen.style.display = 'none'; dom.welcomeScreen.style.display = 'flex'; });
-    dom.btnRestart.addEventListener('click', () => { 
-      sound.btnClick(); state.isGameRunning = false; 
-      if (syncInterval) clearInterval(syncInterval); 
-      dom.hud.style.display = 'none'; dom.welcomeScreen.style.display = 'flex'; 
-    });
     dom.btnSwapHand.addEventListener('click', () => { sound.btnClick(); state.swapHands = !state.swapHands; dom.swapStatus.innerText = state.swapHands?'เปิด':'ปิด'; dom.btnSwapHand.classList.toggle('active'); });
     dom.btnToggleLandmarks.addEventListener('click', () => { sound.btnClick(); state.showLandmarks = !state.showLandmarks; dom.landmarksStatus.innerText = state.showLandmarks?'เปิด':'ปิด'; dom.btnToggleLandmarks.classList.toggle('active'); dom.handDebugCanvas.style.display = state.showLandmarks?'block':'none'; });
     dom.btnToggleSound.addEventListener('click', () => { sound.btnClick(); state.soundEnabled = !state.soundEnabled; dom.soundStatus.innerText = state.soundEnabled?'เปิด':'ปิด'; dom.btnToggleSound.classList.toggle('active'); if (!state.soundEnabled) sound.stopTension(); });
