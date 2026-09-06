@@ -39,14 +39,25 @@
       padding: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
       overflow: hidden;
     }
+    
+    .choice-text { 
+      font-size: 1.5rem; font-weight: 500; text-align: center; 
+      color: #f8fafc; z-index: 2; line-height: 1.4; 
+      transition: transform 0.2s ease, color 0.2s ease;
+    }
+    .choice-progress { position: absolute; bottom: 0; left: 0; height: 12px; width: 0%; background: #f59e0b; z-index: 1; transition: width 0.1s linear; }
+
+    /* เอฟเฟกต์เมื่อเอามือไปแตะ (หดกรอบ และลดขนาดตัวอักษร) */
     .corner-choice.touched {
-      transform: scale(0.9); /* หดเล็กลงเมื่อเอามือแตะ */
+      transform: scale(0.95); 
       border-color: #f59e0b;
-      box-shadow: 0 0 25px rgba(245, 158, 11, 0.8);
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.8);
       background: rgba(30, 41, 59, 0.95);
     }
-    .choice-text { font-size: 1.5rem; font-weight: 500; text-align: center; color: #f8fafc; z-index: 2; line-height: 1.4; }
-    .choice-progress { position: absolute; bottom: 0; left: 0; height: 10px; width: 0%; background: #f59e0b; z-index: 1; transition: width 0.1s linear; }
+    .corner-choice.touched .choice-text {
+      transform: scale(0.85); /* ลดขนาดอักษรลงเล็กน้อยตามที่ต้องการ */
+      color: #fbbf24;
+    }
 
     /* Zone Positions */
     #choice-1 { top: 3%; left: 2%; }
@@ -168,8 +179,8 @@
       <div class="rules-card">
         🎯 <strong>วิธีการเล่น:</strong><br><br>
         1. ⏱️ <strong>อ่านโจทย์:</strong> มีเวลา 5 วินาทีในการอ่าน<br>
-        2. ✋ <strong>ตอบคำถาม:</strong> นำมือไปแตะคำตอบที่มุมจอ (ค้างไว้ 0.8 วิ) ภายในเวลา 5 วินาที<br>
-        3. 💪 <strong>บทลงโทษ:</strong> หากตอบผิด หรือหมดเวลา จะต้องทำท่ายกแขนขึ้น-ลง 10 ครั้ง ถึงจะได้สุ่มคำถามใหม่ (ข้อจะไม่ซ้ำเดิม)
+        2. ✋ <strong>ตอบคำถาม:</strong> นำมือหรือแขนไปแตะที่คำตอบ 4 มุมจอ <strong>ค้างไว้ 1.5 วินาที</strong> (ใช้แขนกี่ข้างก็ได้)<br>
+        3. 💪 <strong>บทลงโทษ:</strong> หากตอบผิด หรือหมดเวลา 5 วิ จะต้องทำท่ายกแขนขึ้น-ลง 10 ครั้ง ถึงจะได้สุ่มคำถามใหม่ (ข้อจะไม่ซ้ำเดิม)
       </div>
       
       <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 พิมพ์ชื่อ-นามสกุล..." autocomplete="off">
@@ -199,7 +210,6 @@
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxZYt87fSUExqnXL7cPIKvDWOFHj1ya3N5OD_zm0tkwrfNWHR4qE85EhYBJi8khQi_I/exec"; 
     let syncInterval; 
 
-    // สร้างคลังโจทย์ 5 ด่าน ด่านละ 50 ข้อ (เพื่อการันตีการสุ่มไม่ซ้ำแม้จะตอบผิดบ่อยๆ)
     const STAGE_POOLS = [[], [], [], [], []];
     const prefixData = [
       {c: 1, p: "meth-"}, {c: 2, p: "eth-"}, {c: 3, p: "prop-"}, {c: 4, p: "but-"}, {c: 5, p: "pent-"},
@@ -209,7 +219,7 @@
     let globalQId = 0;
     for(let stage = 0; stage < 5; stage++) {
       for(let i = 0; i < 50; i++) { 
-        let type = Math.floor(Math.random() * 5); // สุ่มรูปแบบคำถาม 5 รูปแบบ
+        let type = Math.floor(Math.random() * 5); 
         let target = prefixData[Math.floor(Math.random() * 10)];
         
         let wrongAns = [];
@@ -257,7 +267,6 @@
       }
     }
 
-    // แทรกคำถามแบบเจาะจง 5 ข้อแรกที่คุณครูระบุมาลงไปในด่านที่ 1 เพื่อให้มั่นใจว่าจะได้เจอแน่นอน
     STAGE_POOLS[0][0] = { id: 'user_1', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "สารประกอบที่มีคาร์บอน 1 อะตอม ใช้คำขึ้นต้นว่าอะไร?", correct: "meth-", wrongs: ["eth-", "prop-", "but-"] };
     STAGE_POOLS[0][1] = { id: 'user_2', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คำว่า pent- หมายถึงสารประกอบที่มีคาร์บอนกี่อะตอม?", correct: "5", wrongs: ["4", "6", "7"] };
     STAGE_POOLS[0][2] = { id: 'user_3', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "หากโซ่คาร์บอนมี 8 อะตอม ต้องใช้คำขึ้นต้นว่าอะไร?", correct: "oct-", wrongs: ["hept-", "non-", "dec-"] };
@@ -282,7 +291,7 @@
       isGameRunning: false, isReading: false, isAnswering: false, isPenalty: false,
       soundEnabled: true, camReady: false, aiReady: false, 
       particles: [], currentOptions: [], 
-      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 0.8, // 0.8 seconds to confirm touch
+      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 1.5, // 1.5 seconds to confirm touch (ตามที่ขอ)
       answerTimer: 5.0, // 5 seconds to answer
       penaltyReps: 0, penaltyPhase: 'WAIT_UP'
     };
@@ -473,7 +482,7 @@
       dom.penaltyTitle.innerText = "โดนทำโทษ!";
       dom.penaltyCounter.innerText = "0/10";
       dom.penaltyGuidance.innerText = "ดันมือขึ้นสูงๆ!";
-      dom.penaltyHandIndicator = document.getElementById('penalty-hand-line'); // Ensure ref
+      dom.penaltyHandIndicator = document.getElementById('penalty-hand-line'); 
       
       dom.minimalHud.style.display = 'none';
       dom.penaltyOverlay.style.display = 'flex';
@@ -563,7 +572,7 @@
         state.answerTimer -= dt;
         let pTimer = Math.max(0, state.answerTimer / 5.0);
         dom.timerBarFill.style.width = `${pTimer * 100}%`;
-        if (state.answerTimer < 2.0) dom.timerBarFill.style.backgroundColor = '#ef4444'; // ใกล้หมดเวลาเปลี่ยนสีแดง
+        if (state.answerTimer < 2.0) dom.timerBarFill.style.backgroundColor = '#ef4444'; 
         
         if (state.answerTimer <= 0) {
           handleAnswerSelection(-1); // Timeout
@@ -571,16 +580,25 @@
         }
 
         let touchedIdx = -1;
-        let checkZone = (x, y) => {
-          if (x < 0.30 && y < 0.30) return 0; // Top-Left
-          if (x > 0.70 && y < 0.30) return 1; // Top-Right
-          if (x < 0.30 && y > 0.70) return 2; // Bottom-Left
-          if (x > 0.70 && y > 0.70) return 3; // Bottom-Right
+        // เช็คโซนแบบใจดีขึ้นให้ครอบคลุมแขนหรือมือที่เข้ามาในกรอบ 35% ของมุมจอ
+        let checkZone = (handLms) => {
+          if(!handLms) return -1;
+          // เช็คจุดสำคัญของมือ: ข้อมือ[0], ปลายนิ้วชี้[8], โคนนิ้วกลาง[9], ปลายนิ้วก้อย[20]
+          let pts = [handLms[0], handLms[8], handLms[9], handLms[20]];
+          for(let pt of pts) {
+            let x = 1 - pt.x; // สลับซ้ายขวาตามกระจก
+            let y = pt.y;
+            if (x < 0.35 && y < 0.35) return 0; // Top-Left
+            if (x > 0.65 && y < 0.35) return 1; // Top-Right
+            if (x < 0.35 && y > 0.65) return 2; // Bottom-Left
+            if (x > 0.65 && y > 0.65) return 3; // Bottom-Right
+          }
           return -1;
         };
 
-        if (lLms) touchedIdx = checkZone(1 - lLms[8].x, lLms[8].y); // นิ้วชี้ซ้าย
-        if (touchedIdx === -1 && rLms) touchedIdx = checkZone(1 - rLms[8].x, rLms[8].y); // นิ้วชี้ขวา
+        // หากมือซ้ายหรือมือขวาแตะ ถือว่านับหมด
+        touchedIdx = checkZone(lLms);
+        if (touchedIdx === -1) touchedIdx = checkZone(rLms);
 
         if (touchedIdx !== -1) {
           if (state.activeChoiceIdx === touchedIdx) {
@@ -598,7 +616,7 @@
             state.activeChoiceIdx = touchedIdx;
             state.holdTime = 0;
             dom.cCards.forEach(c => c.classList.remove('touched'));
-            dom.cCards[touchedIdx].classList.add('touched');
+            dom.cCards[touchedIdx].classList.add('touched'); // เพิ่มคลาสเพื่อให้กล่อง+อักษรหด
             sound.startCharge();
           }
         } else {
