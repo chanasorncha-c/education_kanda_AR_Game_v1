@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR ภารกิจเคมี: ตอบคำถามด้วยท่าทาง (IUPAC)</title>
+  <title>AR ภารกิจเคมี: ฟิตร่างกายตอบคำถาม (IUPAC)</title>
   
   <!-- Fonts & CDNs -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,185 +25,151 @@
     #canvas-container { z-index: 1; pointer-events: none; }
     #hand-debug-canvas { z-index: 3; pointer-events: none; display: none; }
 
-    /* UI Zones for Hands */
-    .zone-indicator {
-      position: absolute; border: 3px dashed rgba(56, 189, 248, 0.3); border-radius: 20px;
-      background: rgba(56, 189, 248, 0.05); z-index: 2; display: none;
-      transition: all 0.2s; display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.4); font-size: 1.5rem; font-weight: 500; text-align: center;
-    }
-    .zone-indicator.active {
-      border: 3px solid rgba(74, 222, 128, 0.8); background: rgba(74, 222, 128, 0.2);
-      color: rgba(255,255,255,0.9); text-shadow: 0 0 10px rgba(74, 222, 128, 0.8);
-      box-shadow: 0 0 20px rgba(74, 222, 128, 0.3);
-    }
-    #zone-tl { top: 5%; left: 2%; width: 28%; height: 35%; }
-    #zone-tr { top: 5%; right: 2%; width: 28%; height: 35%; }
-    #zone-ml { top: 45%; left: 2%; width: 28%; height: 35%; }
-    #zone-mr { top: 45%; right: 2%; width: 28%; height: 35%; }
+    /* Answer Timer Bar */
+    #timer-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: rgba(0,0,0,0.5); z-index: 10; display: none; }
+    #timer-bar-fill { height: 100%; width: 100%; background: #4ade80; transition: width 0.1s linear, background-color 0.3s; }
 
-    /* Answer Choices Container */
-    #choices-container {
-      position: absolute; bottom: 3%; left: 50%; transform: translateX(-50%);
-      width: 90%; max-width: 1000px; display: none; grid-template-columns: 1fr 1fr;
-      gap: 15px; z-index: 5;
+    /* 4 Corners Choices */
+    #choices-container { display: none; z-index: 5; }
+    .corner-choice {
+      position: absolute; width: 28vw; height: 22vh;
+      background: rgba(15, 23, 42, 0.85); border: 2px solid #38bdf8;
+      border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      padding: 15px; box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      overflow: hidden;
     }
-    .choice-card {
-      background: rgba(15, 23, 42, 0.85); border: 2px solid rgba(255, 255, 255, 0.2);
-      border-radius: 16px; padding: 15px 20px; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; position: relative; overflow: hidden;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(8px);
+    .corner-choice.touched {
+      transform: scale(0.9); /* หดเล็กลงเมื่อเอามือแตะ */
+      border-color: #f59e0b;
+      box-shadow: 0 0 25px rgba(245, 158, 11, 0.8);
+      background: rgba(30, 41, 59, 0.95);
     }
-    .choice-card.highlight { border-color: #f59e0b; box-shadow: 0 0 20px rgba(245, 158, 11, 0.6); transform: scale(1.02); }
-    .choice-icon { font-size: 2rem; color: #38bdf8; margin-bottom: 5px; }
-    .choice-text { font-size: 1.3rem; font-weight: 500; color: #f8fafc; text-align: center; z-index: 2; }
-    .choice-progress {
-      position: absolute; bottom: 0; left: 0; height: 100%; width: 0%;
-      background: rgba(245, 158, 11, 0.3); z-index: 1; transition: width 0.1s linear;
-    }
+    .choice-text { font-size: 1.5rem; font-weight: 500; text-align: center; color: #f8fafc; z-index: 2; line-height: 1.4; }
+    .choice-progress { position: absolute; bottom: 0; left: 0; height: 10px; width: 0%; background: #f59e0b; z-index: 1; transition: width 0.1s linear; }
 
-    /* HUD Elements */
-    .hud-top { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px; z-index: 6;}
-    .hud-stats-card { background: rgba(15, 23, 42, 0.85); border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 16px; padding: 10px 24px; display: flex; align-items: center; gap: 20px; backdrop-filter: blur(8px); }
-    .hud-item { display: flex; flex-direction: column; align-items: center; }
-    .hud-item .title { font-size: 0.75rem; color: #94a3b8; }
-    .hud-item .value { font-size: 1.3rem; font-weight: 600; color: #f8fafc; }
-    
-    .side-controls { position: absolute; top: 15px; right: 15px; display: flex; flex-direction: column; gap: 10px; z-index: 6;}
-    .cyber-btn { background: #334155; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-size: 0.9rem; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 12px; }
-    .cyber-btn.active { background: #10b981; }
+    /* Zone Positions */
+    #choice-1 { top: 3%; left: 2%; }
+    #choice-2 { top: 3%; right: 2%; }
+    #choice-3 { bottom: 3%; left: 2%; }
+    #choice-4 { bottom: 3%; right: 2%; }
 
     /* Minimal HUD */
-    #minimal-hud {
-      position: absolute; bottom: 20px; right: 20px; z-index: 6;
-      background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
-      border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 12px;
-      padding: 8px 16px; display: none; text-align: right;
-    }
+    #minimal-hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(56, 189, 248, 0.5); border-radius: 12px; padding: 8px 24px; display: none; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+    .minimal-text { font-size: 1.2rem; font-weight: 500; color: #38bdf8; }
 
-    #score-popup { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 5rem; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 10; text-shadow: 0 6px 18px rgba(0,0,0,0.8); }
+    /* Score Popup */
+    #score-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 5rem; font-weight: 600; opacity: 0; pointer-events: none; transition: all 0.3s; z-index: 10; text-shadow: 0 6px 18px rgba(0,0,0,0.8); }
     #score-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
     .score-add { color: #4ade80; }
-    .score-sub { color: #f87171; }
+    .score-sub { color: #ef4444; }
 
     /* Reading Phase Overlay */
-    #reading-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 15; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .reading-box { background: #1e293b; border: 3px solid #38bdf8; border-radius: 20px; padding: 30px; max-width: 900px; width: 100%; text-align: center; }
-    .reading-stage { color: #38bdf8; font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
-    .reading-desc { color: #f8fafc; font-size: 1.8rem; font-weight: 500; margin-bottom: 20px; line-height: 1.4; }
-    .reading-timer { font-size: 4rem; font-weight: 700; color: #fbbf24; text-shadow: 0 4px 10px rgba(0,0,0,0.5); margin-bottom: 20px; }
-    
-    .pose-guide-row { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
-    .pose-guide-item { background: #0f172a; padding: 10px 20px; border-radius: 12px; border: 1px solid #475569; display: flex; align-items: center; gap: 10px; }
-    .pose-guide-item span { font-size: 1.5rem; }
+    #reading-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px); z-index: 15; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+    .reading-box { background: #1e293b; border: 3px solid #38bdf8; border-radius: 20px; padding: 40px; max-width: 900px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    .reading-stage { color: #38bdf8; font-size: 1.6rem; font-weight: 600; margin-bottom: 15px; }
+    .reading-desc { color: #f8fafc; font-size: 2.2rem; font-weight: 500; margin-bottom: 30px; line-height: 1.4; }
+    .reading-timer { font-size: 5rem; font-weight: 700; color: #fbbf24; text-shadow: 0 4px 15px rgba(0,0,0,0.6); margin-bottom: 10px; }
+    .reading-instruction { color: #94a3b8; font-size: 1.2rem; }
 
-    /* Modal Screens */
-    #welcome-screen, #end-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .modal-box { background: #1e293b; border: 2px solid #38bdf8; border-radius: 24px; padding: 30px; max-width: 750px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
-    .modal-box h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 8px; }
+    /* Penalty Phase Overlay */
+    #penalty-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(5px); z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
+    .penalty-tracker-container { display: flex; gap: 50px; align-items: center; margin-top: 30px; }
+    .penalty-tracker { width: 60px; height: 350px; border: 4px solid #475569; border-radius: 30px; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
+    .penalty-up-zone { position: absolute; top: 0; width: 100%; height: 35%; background: rgba(74, 222, 128, 0.3); border-bottom: 2px dashed #4ade80; }
+    .penalty-down-zone { position: absolute; bottom: 0; width: 100%; height: 35%; background: rgba(248, 113, 113, 0.3); border-top: 2px dashed #f87171; }
+    .penalty-hand-line { width: 100%; height: 8px; background: #38bdf8; position: absolute; transition: bottom 0.1s; box-shadow: 0 0 15px #38bdf8; border-radius: 4px; }
+    .penalty-stats { display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    #penalty-counter { font-size: 7rem; color: #fbbf24; font-weight: bold; line-height: 1; text-shadow: 0 5px 20px rgba(251, 191, 36, 0.4); }
+    #penalty-guidance { font-size: 2rem; color: #38bdf8; margin-top: 10px; font-weight: 500; }
+
+    /* Modals */
+    #welcome-screen, #end-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+    .modal-box { background: #1e293b; border: 2px solid #38bdf8; border-radius: 24px; padding: 35px 45px; max-width: 750px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.6); }
+    .modal-box h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 10px; }
     
-    .rules-card { background: #0f172a; border-radius: 12px; padding: 15px; text-align: left; font-size: 0.95rem; color: #cbd5e1; margin-bottom: 20px; line-height: 1.6; }
-    .rules-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
-    .rule-item { background: #1e293b; padding: 10px; border-radius: 8px; border: 1px solid #334155; display: flex; align-items: center; gap: 10px; font-weight: 500; color:#fff;}
-    
+    .rules-card { background: #0f172a; border-radius: 12px; padding: 20px; text-align: left; font-size: 1.05rem; color: #cbd5e1; margin-bottom: 25px; line-height: 1.6; }
     .input-player-name { width: 100%; padding: 14px 20px; font-size: 1.2rem; background: #0f172a; border: 2px solid #475569; border-radius: 12px; color: #f8fafc; text-align: center; margin-bottom: 20px; }
-    .btn-action { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; border: none; padding: 14px 40px; font-size: 1.2rem; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.2s; margin-top:10px; }
-    .btn-action:disabled { background: #475569; cursor: not-allowed; }
+    .input-player-name:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.3); }
+    .btn-action { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; border: none; padding: 14px 40px; font-size: 1.2rem; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.2s; margin-top:10px; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4); }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.6); }
+    .btn-action:disabled { background: #475569; cursor: not-allowed; box-shadow: none; }
   </style>
 </head>
 <body>
 
-  <!-- Background Camera & 3D Layer -->
   <video id="webcam-video" playsinline></video>
   <canvas id="hand-debug-canvas"></canvas>
   <div id="canvas-container"></div>
   
-  <!-- UI Hand Zones -->
-  <div id="zone-tl" class="zone-indicator">มือซ้าย<br>ยกขึ้น</div>
-  <div id="zone-tr" class="zone-indicator">มือขวา<br>ยกขึ้น</div>
-  <div id="zone-ml" class="zone-indicator">มือซ้าย<br>กางออก</div>
-  <div id="zone-mr" class="zone-indicator">มือขวา<br>กางออก</div>
-
   <div id="score-popup"></div>
 
-  <!-- Answer Choices HUD (Visible during gameplay) -->
+  <!-- Answer Timer Bar -->
+  <div id="timer-bar-container"><div id="timer-bar-fill"></div></div>
+
+  <!-- Corner Choices -->
   <div id="choices-container">
-    <div class="choice-card" id="choice-1">
-      <div class="choice-progress" id="prog-1"></div>
-      <div class="choice-icon">🙌 ข้อ 1 (ยก 2 แขน)</div>
+    <div class="corner-choice" id="choice-1">
       <div class="choice-text" id="ans-text-1">-</div>
+      <div class="choice-progress" id="prog-1"></div>
     </div>
-    <div class="choice-card" id="choice-2">
-      <div class="choice-progress" id="prog-2"></div>
-      <div class="choice-icon">👐 ข้อ 2 (กาง 2 แขน)</div>
+    <div class="corner-choice" id="choice-2">
       <div class="choice-text" id="ans-text-2">-</div>
+      <div class="choice-progress" id="prog-2"></div>
     </div>
-    <div class="choice-card" id="choice-3">
-      <div class="choice-progress" id="prog-3"></div>
-      <div class="choice-icon">🙋‍♂️ ข้อ 3 (กางซ้าย-ยกขวา)</div>
+    <div class="corner-choice" id="choice-3">
       <div class="choice-text" id="ans-text-3">-</div>
+      <div class="choice-progress" id="prog-3"></div>
     </div>
-    <div class="choice-card" id="choice-4">
-      <div class="choice-progress" id="prog-4"></div>
-      <div class="choice-icon">🙋‍♀️ ข้อ 4 (ยกซ้าย-กางขวา)</div>
+    <div class="corner-choice" id="choice-4">
       <div class="choice-text" id="ans-text-4">-</div>
+      <div class="choice-progress" id="prog-4"></div>
     </div>
   </div>
 
-  <!-- Reading Phase Overlay -->
+  <!-- Reading Phase Overlay (5 Seconds) -->
   <div id="reading-overlay">
     <div class="reading-box">
       <div id="reading-stage" class="reading-stage">ด่านที่ X</div>
       <div id="reading-desc" class="reading-desc">โจทย์สารเคมี</div>
-      <div id="reading-timer" class="reading-timer">3</div>
-      
-      <div class="pose-guide-row">
-        <div class="pose-guide-item"><span>🙌</span> ตอบ 1</div>
-        <div class="pose-guide-item"><span>👐</span> ตอบ 2</div>
-        <div class="pose-guide-item"><span>🙋‍♂️</span> ตอบ 3 (ซ้ายกาง-ขวายก)</div>
-        <div class="pose-guide-item"><span>🙋‍♀️</span> ตอบ 4 (ซ้ายยก-ขวากาง)</div>
-      </div>
+      <div id="reading-timer" class="reading-timer">5</div>
+      <div class="reading-instruction">อ่านโจทย์ให้พร้อม มีเวลาตอบเพียง 5 วินาทีเท่านั้น!</div>
     </div>
   </div>
 
-  <!-- Big HUD (Hidden during gameplay) -->
-  <div id="hud-top" class="hud-top" style="display: none;">
-    <div class="hud-stats-card">
-      <div class="hud-item" style="border-right: 1px solid rgba(255,255,255,0.2); padding-right: 20px;">
-        <span class="title">ผู้เล่น</span>
-        <span id="hud-player-name-display" class="hud-player-name">-</span>
+  <!-- Penalty Phase Overlay (Exercise 10 times) -->
+  <div id="penalty-overlay">
+    <h1 style="color:#ef4444; font-size:3rem; margin-bottom:10px;" id="penalty-title">ตอบผิด!</h1>
+    <p style="font-size:1.5rem; color:#cbd5e1;">บทลงโทษ: ยกแขนขึ้นสุด-ลงสุด 10 ครั้ง เพื่อรับคำถามใหม่</p>
+    
+    <div class="penalty-tracker-container">
+      <div class="penalty-tracker">
+        <div class="penalty-up-zone"></div>
+        <div class="penalty-down-zone"></div>
+        <div id="penalty-hand-line" class="penalty-hand-line" style="bottom: 50%;"></div>
       </div>
-      <div class="hud-item">
-        <span class="title">คะแนนสะสม</span>
-        <span id="hud-score" class="value" style="color:#4ade80;">0</span>
+      <div class="penalty-stats">
+        <div id="penalty-counter">0/10</div>
+        <div id="penalty-guidance">ดันมือขึ้นสูงๆ!</div>
       </div>
     </div>
-  </div>
-
-  <!-- Side Controls -->
-  <div id="side-controls" class="side-controls" style="display: none;">
-    <button id="btn-toggle-landmarks" class="cyber-btn"><span>จุดตรวจมือ</span> <span id="landmarks-status">ปิด</span></button>
-    <button id="btn-toggle-sound" class="cyber-btn active"><span>เสียง SFX</span> <span id="sound-status">เปิด</span></button>
   </div>
 
   <!-- Minimal HUD (Only thing shown during gameplay) -->
   <div id="minimal-hud">
-    <div class="minimal-text" id="minimal-q-num">ด่านที่ 1 | ข้อ 1/3</div>
+    <div class="minimal-text" id="minimal-q-num">ด่านที่ 1 | ข้อ 1/3 | คะแนน: 0</div>
   </div>
 
   <!-- หน้าเริ่มเกม -->
   <div id="welcome-screen">
     <div class="modal-box">
-      <h1>🧬 AR ภารกิจเคมี: ตอบด้วยท่าทาง</h1>
+      <h1>🧬 AR ภารกิจเคมี: ฟิตร่างกาย</h1>
       
       <div class="rules-card">
-        🎯 <strong>วิธีการเล่น:</strong> อ่านโจทย์ให้เข้าใจ แล้วนำมือไปวางใน <strong>"กรอบแสง"</strong> ซ้าย-ขวา เพื่อเลือกคำตอบ ทำท่าค้างไว้ 1.5 วินาทีเพื่อยืนยัน
-        <div class="rules-grid">
-          <div class="rule-item">🙌 ท่า 1: ยก 2 แขน</div>
-          <div class="rule-item">👐 ท่า 2: กาง 2 แขน</div>
-          <div class="rule-item">🙋‍♂️ ท่า 3: ซ้ายกาง - ขวายก</div>
-          <div class="rule-item">🙋‍♀️ ท่า 4: ซ้ายยก - ขวากาง</div>
-        </div>
+        🎯 <strong>วิธีการเล่น:</strong><br><br>
+        1. ⏱️ <strong>อ่านโจทย์:</strong> มีเวลา 5 วินาทีในการอ่าน<br>
+        2. ✋ <strong>ตอบคำถาม:</strong> นำมือไปแตะคำตอบที่มุมจอ (ค้างไว้ 0.8 วิ) ภายในเวลา 5 วินาที<br>
+        3. 💪 <strong>บทลงโทษ:</strong> หากตอบผิด หรือหมดเวลา จะต้องทำท่ายกแขนขึ้น-ลง 10 ครั้ง ถึงจะได้สุ่มคำถามใหม่ (ข้อจะไม่ซ้ำเดิม)
       </div>
       
       <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 พิมพ์ชื่อ-นามสกุล..." autocomplete="off">
@@ -228,66 +194,97 @@
 
   <script>
     /* ==========================================================================
-       CONFIGURATION & PROCEDURAL DATA GENERATION (250 QUESTIONS)
+       CONFIGURATION & PROCEDURAL DATA GENERATION (C1 - C10 QUESTIONS)
        ========================================================================== */
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxZYt87fSUExqnXL7cPIKvDWOFHj1ya3N5OD_zm0tkwrfNWHR4qE85EhYBJi8khQi_I/exec"; 
     let syncInterval; 
 
+    // สร้างคลังโจทย์ 5 ด่าน ด่านละ 50 ข้อ (เพื่อการันตีการสุ่มไม่ซ้ำแม้จะตอบผิดบ่อยๆ)
     const STAGE_POOLS = [[], [], [], [], []];
-    const THAI_NUM = ["ศูนย์", "มอนอ", "ได", "ไตร", "เตตระ", "เพนตะ", "เฮกซะ"];
-    const ALKANES = ["Methane", "Ethane", "Propane", "Butane", "Pentane", "Hexane", "Heptane", "Octane", "Nonane", "Decane", "Undecane", "Dodecane"];
-    const ALKYLS = ["Methyl", "Ethyl", "Propyl", "Butyl"];
+    const prefixData = [
+      {c: 1, p: "meth-"}, {c: 2, p: "eth-"}, {c: 3, p: "prop-"}, {c: 4, p: "but-"}, {c: 5, p: "pent-"},
+      {c: 6, p: "hex-"}, {c: 7, p: "hept-"}, {c: 8, p: "oct-"}, {c: 9, p: "non-"}, {c: 10, p: "dec-"}
+    ];
 
-    for (let i = 0; i < 50; i++) {
-      let cLen = Math.floor(Math.random() * 6) + 5; 
-      STAGE_POOLS[0].push({
-        id: `s1_${i}`, stage: `ด่านที่ 1: หาสายโซ่หลัก`, desc: `สารที่มีคาร์บอนต่อกันเป็นโซ่หลักยาวสุด ${cLen} อะตอม จะใช้ชื่อสายหลักว่าอะไร?`,
-        correct: `${ALKANES[cLen-1]}`, wrongs: [`${ALKANES[cLen-2]}`, `${ALKANES[cLen]}`, `${ALKANES[cLen-3]||'Ethane'}`]
-      });
+    let globalQId = 0;
+    for(let stage = 0; stage < 5; stage++) {
+      for(let i = 0; i < 50; i++) { 
+        let type = Math.floor(Math.random() * 5); // สุ่มรูปแบบคำถาม 5 รูปแบบ
+        let target = prefixData[Math.floor(Math.random() * 10)];
+        
+        let wrongAns = [];
+        while(wrongAns.length < 3) {
+          let w = prefixData[Math.floor(Math.random() * 10)];
+          if(w.c !== target.c && !wrongAns.includes(w)) {
+            wrongAns.push(w);
+          }
+        }
 
-      let left = Math.floor(Math.random() * 3) + 2; let right = left + Math.floor(Math.random() * 3) + 1; 
-      let swap = Math.random() > 0.5; let lPos = swap ? right : left; let rPos = swap ? left : right;
-      STAGE_POOLS[1].push({
-        id: `s2_${i}`, stage: `ด่านที่ 2: เลือกทิศทางการนับ`, desc: `หมู่เกาะอยู่ตำแหน่ง C-${lPos} (นับซ้ายไปขวา) และ C-${rPos} (นับขวาไปซ้าย) ควรนับจากฝั่งใด?`,
-        correct: swap ? `ขวา (C-${left})` : `ซ้าย (C-${left})`, wrongs: [swap ? `ซ้าย (C-${right})` : `ขวา (C-${right})`, "ฝั่งใดก็ได้", "นับจากตรงกลาง"]
-      });
+        let desc, correct, wrongs;
+        if (type === 0) {
+          desc = `สารประกอบที่มีคาร์บอน ${target.c} อะตอม ใช้คำขึ้นต้นว่าอะไร?`;
+          correct = target.p;
+          wrongs = wrongAns.map(w => w.p);
+        } else if (type === 1) {
+          desc = `คำว่า ${target.p} หมายถึงสารประกอบที่มีคาร์บอนกี่อะตอม?`;
+          correct = `${target.c}`;
+          wrongs = wrongAns.map(w => `${w.c}`);
+        } else if (type === 2) {
+          desc = `หากโซ่คาร์บอนมี ${target.c} อะตอม ต้องใช้คำขึ้นต้นว่าอะไร?`;
+          correct = target.p;
+          wrongs = wrongAns.map(w => w.p);
+        } else if (type === 3) {
+          let wrongPairs = wrongAns.map(w => {
+            let fakeC = w.c + (Math.random() > 0.5 ? 1 : -1);
+            if(fakeC < 1) fakeC = 2;
+            if(fakeC === w.c) fakeC += 1;
+            return `${w.p} → C${fakeC}`;
+          });
+          desc = `ข้อใดจับคู่ได้ถูกต้อง?`;
+          correct = `${target.p} → C${target.c}`;
+          wrongs = wrongPairs;
+        } else {
+          desc = `คำขึ้นต้นในข้อใด หมายถึงจำนวนคาร์บอนเท่ากับ ${target.c}?`;
+          correct = target.p;
+          wrongs = wrongAns.map(w => w.p);
+        }
 
-      let isDouble = Math.random() > 0.5;
-      STAGE_POOLS[2].push({
-        id: `s3_${i}`, stage: `ด่านที่ 3: ระบุพันธะ`, desc: `สารไฮโดรคาร์บอนที่มีพันธะ${isDouble ? 'คู่ (C=C)' : 'สาม (C≡C)'} ในโมเลกุล จะลงท้ายชื่อด้วยเสียงใด?`,
-        correct: isDouble ? "-ene" : "-yne", wrongs: [isDouble ? "-yne" : "-ene", "-ane", "-ol"]
-      });
-
-      let numSub = Math.floor(Math.random() * 3) + 2; let alkylType = Math.floor(Math.random() * 3); 
-      STAGE_POOLS[3].push({
-        id: `s4_${i}`, stage: `ด่านที่ 4: ระบุหมู่แทนที่`, desc: `หากมีหมู่ ${ALKYLS[alkylType]} ซ้ำกัน ${numSub} ตำแหน่ง ต้องใช้คำนำหน้าว่าอะไร?`,
-        correct: `${THAI_NUM[numSub]}-`, wrongs: [`${THAI_NUM[numSub-1]}-`, `${THAI_NUM[numSub+1]}-`, `${THAI_NUM[1]}-`]
-      });
-
-      let cCount = Math.floor(Math.random() * 4) + 5; let pos = Math.floor(Math.random() * 2) + 2;
-      STAGE_POOLS[4].push({
-        id: `s5_${i}`, stage: `ด่านที่ 5: ตั้งชื่อ IUPAC`, desc: `โซ่หลักมี ${cCount} คาร์บอน และมี Methyl 1 หมู่เกาะที่ C-${pos} สารนี้ชื่อว่า?`,
-        correct: `${pos}-methyl${ALKANES[cCount-1].toLowerCase()}`, wrongs: [`${pos+1}-methyl${ALKANES[cCount-1].toLowerCase()}`, `${pos}-ethyl${ALKANES[cCount-2].toLowerCase()}`, `${pos}-methyl${ALKANES[cCount].toLowerCase()}`]
-      });
+        STAGE_POOLS[stage].push({
+          id: `q_${globalQId++}`,
+          stage: `ด่านที่ ${stage + 1}: สายโซ่หลัก C1-C10`,
+          desc: desc, correct: correct, wrongs: wrongs
+        });
+      }
     }
+
+    // แทรกคำถามแบบเจาะจง 5 ข้อแรกที่คุณครูระบุมาลงไปในด่านที่ 1 เพื่อให้มั่นใจว่าจะได้เจอแน่นอน
+    STAGE_POOLS[0][0] = { id: 'user_1', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "สารประกอบที่มีคาร์บอน 1 อะตอม ใช้คำขึ้นต้นว่าอะไร?", correct: "meth-", wrongs: ["eth-", "prop-", "but-"] };
+    STAGE_POOLS[0][1] = { id: 'user_2', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คำว่า pent- หมายถึงสารประกอบที่มีคาร์บอนกี่อะตอม?", correct: "5", wrongs: ["4", "6", "7"] };
+    STAGE_POOLS[0][2] = { id: 'user_3', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "หากโซ่คาร์บอนมี 8 อะตอม ต้องใช้คำขึ้นต้นว่าอะไร?", correct: "oct-", wrongs: ["hept-", "non-", "dec-"] };
+    STAGE_POOLS[0][3] = { id: 'user_4', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "ข้อใดจับคู่ได้ถูกต้อง?", correct: "but- → C4", wrongs: ["prop- → C2", "hex- → C7", "oct- → C9"] };
+    STAGE_POOLS[0][4] = { id: 'user_5', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "ถ้าสารประกอบมีคาร์บอน 10 อะตอม จะใช้คำว่าอะไร?", correct: "dec-", wrongs: ["non-", "oct-", "hept-"] };
 
     const dom = {
       video: document.getElementById('webcam-video'), canvasContainer: document.getElementById('canvas-container'), handDebugCanvas: document.getElementById('hand-debug-canvas'), 
-      zTL: document.getElementById('zone-tl'), zTR: document.getElementById('zone-tr'), zML: document.getElementById('zone-ml'), zMR: document.getElementById('zone-mr'),
       choicesContainer: document.getElementById('choices-container'), cCards: [document.getElementById('choice-1'), document.getElementById('choice-2'), document.getElementById('choice-3'), document.getElementById('choice-4')],
       cProgs: [document.getElementById('prog-1'), document.getElementById('prog-2'), document.getElementById('prog-3'), document.getElementById('prog-4')],
       cTexts: [document.getElementById('ans-text-1'), document.getElementById('ans-text-2'), document.getElementById('ans-text-3'), document.getElementById('ans-text-4')],
-      scorePopup: document.getElementById('score-popup'), readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), 
-      hudTop: document.getElementById('hud-top'), sideControls: document.getElementById('side-controls'), minimalHud: document.getElementById('minimal-hud'), minimalQNum: document.getElementById('minimal-q-num'), hudScore: document.getElementById('hud-score'),
-      welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), setupStatus: document.getElementById('setup-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), btnToggleLandmarks: document.getElementById('btn-toggle-landmarks'), landmarksStatus: document.getElementById('landmarks-status'), btnToggleSound: document.getElementById('btn-toggle-sound'), soundStatus: document.getElementById('sound-status'), finalScoreVal: document.getElementById('final-score-val'),
-      inputPlayerName: document.getElementById('input-player-name'), hudPlayerNameDisplay: document.getElementById('hud-player-name-display'), finalPlayerName: document.getElementById('final-player-name'), saveDataStatus: document.getElementById('save-data-status')
+      scorePopup: document.getElementById('score-popup'), timerBarCont: document.getElementById('timer-bar-container'), timerBarFill: document.getElementById('timer-bar-fill'),
+      readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), 
+      penaltyOverlay: document.getElementById('penalty-overlay'), penaltyTitle: document.getElementById('penalty-title'), penaltyHandLine: document.getElementById('penalty-hand-line'), penaltyCounter: document.getElementById('penalty-counter'), penaltyGuidance: document.getElementById('penalty-guidance'),
+      minimalHud: document.getElementById('minimal-hud'), minimalQNum: document.getElementById('minimal-q-num'), 
+      welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), setupStatus: document.getElementById('setup-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), finalScoreVal: document.getElementById('final-score-val'),
+      inputPlayerName: document.getElementById('input-player-name'), finalPlayerName: document.getElementById('final-player-name'), saveDataStatus: document.getElementById('save-data-status')
     };
 
     const state = { 
       playerName: "", score: 0, currentStage: 0, correctInStage: 0, targetPerStage: 3, usedQuestionIds: new Set(),
-      isGameRunning: false, isReading: false, soundEnabled: true, showLandmarks: false, camReady: false, aiReady: false, 
+      isGameRunning: false, isReading: false, isAnswering: false, isPenalty: false,
+      soundEnabled: true, camReady: false, aiReady: false, 
       particles: [], currentOptions: [], 
-      activePose: 0, holdTime: 0, requiredHoldTime: 1.5 // 1.5 seconds to confirm answer
+      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 0.8, // 0.8 seconds to confirm touch
+      answerTimer: 5.0, // 5 seconds to answer
+      penaltyReps: 0, penaltyPhase: 'WAIT_UP'
     };
 
     /* ==========================================================================
@@ -303,7 +300,6 @@
         gain.gain.setValueAtTime(gainVal, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
       }
-      btnClick() { this.playTone(600, 'triangle', 0.08, 0.25); }
       countdownBeep() { this.playTone(440, 'sine', 0.15, 0.3); }
       goBeep() { this.playTone(880, 'triangle', 0.3, 0.4); }     
       gameStart() { [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => { setTimeout(() => this.playTone(f, 'triangle', 0.2, 0.25), idx * 100); }); }
@@ -330,6 +326,8 @@
         gain.gain.setValueAtTime(0.3, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.4);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + 0.45);
       }
+      repUp() { this.playTone(600, 'sine', 0.1, 0.2); }
+      repDown() { this.playTone(800, 'triangle', 0.1, 0.3); }
       finishGame() { [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, i) => { setTimeout(() => this.playTone(f, 'triangle', 0.4, 0.3), i * 140); }); }
     }
     const sound = new SoundEngine();
@@ -351,7 +349,7 @@
       const pMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 });
       for(let i=0; i<30; i++) {
         const p = new THREE.Mesh(new THREE.BoxGeometry(10, 10, 10), pMat);
-        p.position.set(0, 0, 0); // Center explosion
+        p.position.set(0, 0, 0); 
         const ang = Math.random() * Math.PI * 2; const spd = Math.random() * 25 + 10;
         scene.add(p);
         state.particles.push({ mesh: p, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: 1.0 });
@@ -360,7 +358,7 @@
     
     function updateParticles() {
       for(let i = state.particles.length-1; i>=0; i--) {
-        let p = state.particles[i]; p.vy -= 0.8; // Gravity
+        let p = state.particles[i]; p.vy -= 0.8; 
         p.mesh.position.x += p.vx; p.mesh.position.y += p.vy;
         p.mesh.rotation.z += 0.1; p.mesh.rotation.x += 0.1;
         p.life -= 0.02; p.mesh.scale.setScalar(Math.max(0, p.life)); p.mesh.material.opacity = p.life;
@@ -385,24 +383,24 @@
       dom.readingStage.innerText = `ด่านที่ ${state.currentStage + 1} (ผ่านแล้ว ${state.correctInStage}/${state.targetPerStage})`; 
       dom.readingDesc.innerText = qData.desc; 
       
-      dom.hudTop.style.display = 'flex'; dom.sideControls.style.display = 'flex'; dom.minimalHud.style.display = 'none';
-      dom.choicesContainer.style.display = 'none'; // Hide choices during reading
-      dom.zTL.style.display = 'none'; dom.zTR.style.display = 'none'; dom.zML.style.display = 'none'; dom.zMR.style.display = 'none';
+      dom.minimalHud.style.display = 'none';
+      dom.choicesContainer.style.display = 'none'; 
+      dom.timerBarCont.style.display = 'none';
 
-      state.isReading = true; dom.readingOverlay.style.display = 'flex';
-      let count = 3; dom.readingTimer.innerText = count; sound.countdownBeep();
+      state.isReading = true; state.isAnswering = false; state.isPenalty = false;
+      dom.readingOverlay.style.display = 'flex';
+      
+      let count = 5; // 5 Seconds to read
+      dom.readingTimer.innerText = count; sound.countdownBeep();
       
       const iv = setInterval(() => {
         count--;
         if (count > 0) { dom.readingTimer.innerText = count; sound.countdownBeep(); }
         else {
-          clearInterval(iv); dom.readingTimer.innerText = "ตอบได้เลย!"; sound.goBeep();
+          clearInterval(iv); dom.readingTimer.innerText = "แตะคำตอบเลย!"; sound.goBeep();
           setTimeout(() => { 
-            dom.readingOverlay.style.display = 'none'; state.isReading = false; 
-            
-            dom.hudTop.style.display = 'none'; dom.sideControls.style.display = 'none'; dom.minimalHud.style.display = 'block';
-            dom.minimalQNum.innerText = `ด่านที่ ${state.currentStage + 1} | ข้อ ${state.correctInStage + 1}/${state.targetPerStage}`;
-
+            dom.readingOverlay.style.display = 'none'; 
+            state.isReading = false; 
             setupChoices(qData); 
           }, 500);
         }
@@ -410,7 +408,6 @@
     }
     
     function setupChoices(qData) {
-      // Create options array: 1 correct, 3 wrongs
       state.currentOptions = [
         { text: qData.correct, isCorrect: true },
         { text: qData.wrongs[0], isCorrect: false },
@@ -424,44 +421,75 @@
       for(let i=0; i<4; i++) {
         dom.cTexts[i].innerText = state.currentOptions[i].text;
         dom.cProgs[i].style.width = '0%';
-        dom.cCards[i].classList.remove('highlight');
+        dom.cCards[i].classList.remove('touched');
       }
       
-      // Show gameplay UI
-      dom.choicesContainer.style.display = 'grid';
-      dom.zTL.style.display = 'flex'; dom.zTR.style.display = 'flex'; dom.zML.style.display = 'flex'; dom.zMR.style.display = 'flex';
+      // Show UI
+      dom.choicesContainer.style.display = 'block';
+      dom.minimalHud.style.display = 'block';
+      dom.minimalQNum.innerText = `ด่านที่ ${state.currentStage + 1} | ข้อ ${state.correctInStage + 1}/${state.targetPerStage} | คะแนน: ${state.score}`;
       
-      state.activePose = 0;
+      // Start 5-second Answer Timer
+      state.answerTimer = 5.0;
+      dom.timerBarFill.style.width = '100%';
+      dom.timerBarFill.style.backgroundColor = '#4ade80';
+      dom.timerBarCont.style.display = 'block';
+      
+      state.activeChoiceIdx = -1;
       state.holdTime = 0;
+      state.isAnswering = true;
     }
     
-    function handleAnswerSelection(poseIndex) {
-      if(state.isReading || poseIndex < 1 || poseIndex > 4) return;
-      state.isReading = true; // Block further input
+    function handleAnswerSelection(choiceIdx) {
+      state.isAnswering = false;
       sound.stopCharge();
+      dom.choicesContainer.style.display = 'none';
+      dom.timerBarCont.style.display = 'none';
       
-      let selectedOption = state.currentOptions[poseIndex - 1];
+      if(choiceIdx === -1) {
+        // Timeout
+        addScore(-5); showPopup("หมดเวลา!", 'score-sub'); sound.hitWrong(); createExplosion(0xef4444);
+        setTimeout(startPenalty, 1200);
+        return;
+      }
       
+      let selectedOption = state.currentOptions[choiceIdx];
       if(selectedOption.isCorrect) {
         addScore(10); showPopup("+10 ถูกต้อง!", 'score-add'); sound.hitCorrect(); createExplosion(0x4ade80);
         state.correctInStage++;
         if (state.correctInStage >= state.targetPerStage) { state.currentStage++; state.correctInStage = 0; }
+        setTimeout(spawnQuestionRound, 1500);
       } else {
-        addScore(-5); showPopup("-5 ผิด!", 'score-sub'); sound.hitWrong(); createExplosion(0xf87171);
+        addScore(-5); showPopup("-5 ผิด!", 'score-sub'); sound.hitWrong(); createExplosion(0xef4444);
+        setTimeout(startPenalty, 1200);
       }
-      
-      // Reset UI
-      dom.choicesContainer.style.display = 'none';
-      dom.zTL.style.display = 'none'; dom.zTR.style.display = 'none'; dom.zML.style.display = 'none'; dom.zMR.style.display = 'none';
-      
-      setTimeout(() => spawnQuestionRound(), 1500);
     }
 
-    function addScore(d) { state.score = Math.max(0, state.score + d); dom.hudScore.innerText = state.score; }
-    function showPopup(t, c) { dom.scorePopup.innerText = t; dom.scorePopup.className = `show ${c}`; setTimeout(() => dom.scorePopup.className = '', 1200); }
+    function startPenalty() {
+      state.isPenalty = true;
+      state.penaltyReps = 0;
+      state.penaltyPhase = 'WAIT_UP';
+      
+      dom.penaltyTitle.innerText = "โดนทำโทษ!";
+      dom.penaltyCounter.innerText = "0/10";
+      dom.penaltyGuidance.innerText = "ดันมือขึ้นสูงๆ!";
+      dom.penaltyHandIndicator = document.getElementById('penalty-hand-line'); // Ensure ref
+      
+      dom.minimalHud.style.display = 'none';
+      dom.penaltyOverlay.style.display = 'flex';
+    }
+
+    function endPenalty() {
+      state.isPenalty = false;
+      dom.penaltyOverlay.style.display = 'none';
+      spawnQuestionRound(); // สุ่มข้อใหม่เมื่อทำโทษเสร็จ
+    }
+
+    function addScore(d) { state.score = Math.max(0, state.score + d); }
+    function showPopup(t, c) { dom.scorePopup.innerText = t; dom.scorePopup.className = `show ${c}`; setTimeout(() => dom.scorePopup.className = '', 1000); }
 
     /* ==========================================================================
-       AI HAND TRACKING & POSE LOGIC
+       AI HAND TRACKING & LOGIC
        ========================================================================== */
     function checkSetupReady() {
       const hasName = dom.inputPlayerName.value.trim().length > 0;
@@ -488,90 +516,98 @@
       let left = null, right = null;
       if (results.multiHandLandmarks) {
         for (let i=0; i<results.multiHandLandmarks.length; i++) {
-          const lms = results.multiHandLandmarks[i]; const isL = (results.multiHandedness[i].label === 'Right'); // Camera mirrored => User's Left is on Left screen
+          const lms = results.multiHandLandmarks[i]; const isL = (results.multiHandedness[i].label === 'Right'); // Camera mirrored
           if (isL) left = lms; else right = lms;
-          
-          if (state.showLandmarks) { 
-            ctx.fillStyle = isL ? '#38bdf8' : '#a855f7'; 
-            lms.forEach(pt => { ctx.beginPath(); ctx.arc((1-pt.x)*window.innerWidth, pt.y*window.innerHeight, 5, 0, 2*Math.PI); ctx.fill(); }); 
-          }
         }
       }
-      processPoses(left, right);
+      processHands(left, right);
     }
     
     let lastFrameTime = Date.now();
-    function processPoses(lLms, rLms) {
-      if(state.isReading || !state.isGameRunning) return;
-      
+    function processHands(lLms, rLms) {
+      if(!state.isGameRunning) return;
       let dt = (Date.now() - lastFrameTime) / 1000; lastFrameTime = Date.now();
       
-      // Determine Zones based on Landmark 9 (Middle finger base)
-      let lZone = null, rZone = null;
-      
-      // Reset UI highlights
-      dom.zTL.classList.remove('active'); dom.zML.classList.remove('active');
-      dom.zTR.classList.remove('active'); dom.zMR.classList.remove('active');
-
-      if (lLms) {
-        let x = 1 - lLms[9].x; let y = lLms[9].y;
-        if(x < 0.35) { // Left side of screen
-          if(y < 0.45) { lZone = 'TOP'; dom.zTL.classList.add('active'); }
-          else { lZone = 'SIDE'; dom.zML.classList.add('active'); }
-        }
-      }
-      if (rLms) {
-        let x = 1 - rLms[9].x; let y = rLms[9].y;
-        if(x > 0.65) { // Right side of screen
-          if(y < 0.45) { rZone = 'TOP'; dom.zTR.classList.add('active'); }
-          else { rZone = 'SIDE'; dom.zMR.classList.add('active'); }
-        }
-      }
-
-      // Map Zones to 4 Poses
-      let detectedPose = 0;
-      if(lZone === 'TOP' && rZone === 'TOP') detectedPose = 1;      // 🙌
-      else if(lZone === 'SIDE' && rZone === 'SIDE') detectedPose = 2; // 👐
-      else if(lZone === 'SIDE' && rZone === 'TOP') detectedPose = 3;  // 🙋‍♂️ (ซ้ายกาง ขวายก)
-      else if(lZone === 'TOP' && rZone === 'SIDE') detectedPose = 4;  // 🙋‍♀️ (ซ้ายยก ขวากาง)
-
-      // Process Holding logic
-      if(detectedPose > 0) {
-        if(state.activePose === detectedPose) {
-          state.holdTime += dt;
-          let ratio = Math.min(state.holdTime / state.requiredHoldTime, 1.0);
+      // --- PENALTY MODE (Exercise) ---
+      if (state.isPenalty) {
+        let yVals = [];
+        if(lLms) yVals.push(lLms[9].y);
+        if(rLms) yVals.push(rLms[9].y);
+        
+        if (yVals.length > 0) {
+          let avgY = yVals.reduce((a,b)=>a+b) / yVals.length; // 0 = top, 1 = bottom
           
-          // Update visual progress
-          dom.cCards.forEach((c, idx) => {
-            if(idx + 1 === detectedPose) {
-              c.classList.add('highlight');
-              dom.cProgs[idx].style.width = `${ratio * 100}%`;
-            } else {
-              c.classList.remove('highlight');
-              dom.cProgs[idx].style.width = `0%`;
+          dom.penaltyHandLine.style.bottom = ((1.0 - avgY) * 100) + "%";
+
+          if (state.penaltyPhase === 'WAIT_UP' && avgY < 0.35) {
+            state.penaltyPhase = 'WAIT_DOWN';
+            sound.repUp();
+            dom.penaltyGuidance.innerText = "ดึงแขนลงต่ำๆ!";
+          } else if (state.penaltyPhase === 'WAIT_DOWN' && avgY > 0.65) {
+            state.penaltyPhase = 'WAIT_UP';
+            state.penaltyReps++;
+            sound.repDown();
+            dom.penaltyCounter.innerText = `${state.penaltyReps}/10`;
+            dom.penaltyGuidance.innerText = "ยกแขนขึ้นสูงๆ!";
+            
+            if (state.penaltyReps >= 10) {
+               endPenalty();
             }
-          });
-          
-          if(state.holdTime < state.requiredHoldTime) {
-            if(state.holdTime > 0.1 && state.holdTime < 0.2) sound.startCharge(); // Start sound slightly delayed
+          }
+        }
+        return; 
+      }
+
+      // --- ANSWERING MODE (Touch corners) ---
+      if (state.isAnswering) {
+        state.answerTimer -= dt;
+        let pTimer = Math.max(0, state.answerTimer / 5.0);
+        dom.timerBarFill.style.width = `${pTimer * 100}%`;
+        if (state.answerTimer < 2.0) dom.timerBarFill.style.backgroundColor = '#ef4444'; // ใกล้หมดเวลาเปลี่ยนสีแดง
+        
+        if (state.answerTimer <= 0) {
+          handleAnswerSelection(-1); // Timeout
+          return;
+        }
+
+        let touchedIdx = -1;
+        let checkZone = (x, y) => {
+          if (x < 0.30 && y < 0.30) return 0; // Top-Left
+          if (x > 0.70 && y < 0.30) return 1; // Top-Right
+          if (x < 0.30 && y > 0.70) return 2; // Bottom-Left
+          if (x > 0.70 && y > 0.70) return 3; // Bottom-Right
+          return -1;
+        };
+
+        if (lLms) touchedIdx = checkZone(1 - lLms[8].x, lLms[8].y); // นิ้วชี้ซ้าย
+        if (touchedIdx === -1 && rLms) touchedIdx = checkZone(1 - rLms[8].x, rLms[8].y); // นิ้วชี้ขวา
+
+        if (touchedIdx !== -1) {
+          if (state.activeChoiceIdx === touchedIdx) {
+            state.holdTime += dt;
+            let ratio = Math.min(state.holdTime / state.requiredHoldTime, 1.0);
+            dom.cProgs[touchedIdx].style.width = `${ratio * 100}%`;
+            
+            if (state.holdTime > 0.1 && state.holdTime < 0.15) sound.startCharge();
             sound.updateCharge(ratio);
+
+            if (state.holdTime >= state.requiredHoldTime) {
+              handleAnswerSelection(touchedIdx);
+            }
           } else {
-            // Confirm Selection
-            handleAnswerSelection(detectedPose);
+            state.activeChoiceIdx = touchedIdx;
+            state.holdTime = 0;
+            dom.cCards.forEach(c => c.classList.remove('touched'));
+            dom.cCards[touchedIdx].classList.add('touched');
+            sound.startCharge();
           }
         } else {
-          // Changed pose
-          state.activePose = detectedPose;
+          state.activeChoiceIdx = -1;
           state.holdTime = 0;
-          sound.startCharge();
+          sound.stopCharge();
+          dom.cCards.forEach(c => c.classList.remove('touched'));
+          dom.cProgs.forEach(p => p.style.width = '0%');
         }
-      } else {
-        // No valid pose
-        state.activePose = 0;
-        state.holdTime = 0;
-        sound.stopCharge();
-        dom.cCards.forEach(c => c.classList.remove('highlight'));
-        dom.cProgs.forEach(p => p.style.width = '0%');
       }
     }
 
@@ -579,7 +615,7 @@
        GAME FLOW & REAL-TIME DATA SENDING
        ========================================================================== */
     async function sendDataToTeacher(statusText = "กำลังเล่น") {
-      if (!GAS_URL) { if (statusText === "จบเกม") dom.saveDataStatus.innerHTML = "<span style='color:#fbbf24'>ไม่ได้บันทึกคะแนน (ไม่ได้ตั้งค่า URL)</span>"; return; }
+      if (!GAS_URL) return;
       try {
         const formData = new FormData(); formData.append("name", state.playerName); formData.append("score", state.score); formData.append("status", statusText);
         await fetch(GAS_URL, { method: "POST", mode: "no-cors", body: formData });
@@ -589,13 +625,13 @@
 
     function startGame() {
       state.playerName = dom.inputPlayerName.value.trim() || "ไม่ระบุชื่อ";
-      dom.hudPlayerNameDisplay.innerText = state.playerName; dom.finalPlayerName.innerText = state.playerName;
+      dom.finalPlayerName.innerText = state.playerName;
       
       sound.init(); sound.gameStart();
       dom.welcomeScreen.style.display = 'none'; dom.endScreen.style.display = 'none'; 
       
       state.score = 0; state.currentStage = 0; state.correctInStage = 0; state.usedQuestionIds.clear();
-      state.isGameRunning = true; dom.hudScore.innerText = "0";
+      state.isGameRunning = true; 
       
       sendDataToTeacher("กำลังเล่น");
       if (syncInterval) clearInterval(syncInterval);
@@ -609,9 +645,9 @@
       state.isGameRunning = false; sound.finishGame();
       if (syncInterval) clearInterval(syncInterval);
       
-      dom.hudTop.style.display = 'none'; dom.sideControls.style.display = 'none'; dom.minimalHud.style.display = 'none';
+      dom.minimalHud.style.display = 'none';
       dom.choicesContainer.style.display = 'none';
-      dom.zTL.style.display = 'none'; dom.zTR.style.display = 'none'; dom.zML.style.display = 'none'; dom.zMR.style.display = 'none';
+      dom.timerBarCont.style.display = 'none';
 
       dom.endScreen.style.display = 'flex'; dom.finalScoreVal.innerText = state.score;
       dom.saveDataStatus.innerHTML = "กำลังสรุปผลส่งให้คุณครู... <div class='spinner' style='display:inline-block; vertical-align:middle; width:16px; height:16px; border-width:2px;'></div>";
@@ -624,9 +660,9 @@
       renderer.render(scene, camera);
     }
 
-    dom.btnStartGame.addEventListener('click', startGame); dom.btnPlayAgain.addEventListener('click', () => { dom.endScreen.style.display = 'none'; dom.welcomeScreen.style.display = 'flex'; });
-    dom.btnToggleLandmarks.addEventListener('click', () => { sound.btnClick(); state.showLandmarks = !state.showLandmarks; dom.landmarksStatus.innerText = state.showLandmarks?'เปิด':'ปิด'; dom.btnToggleLandmarks.classList.toggle('active'); dom.handDebugCanvas.style.display = state.showLandmarks?'block':'none'; });
-    dom.btnToggleSound.addEventListener('click', () => { sound.btnClick(); state.soundEnabled = !state.soundEnabled; dom.soundStatus.innerText = state.soundEnabled?'เปิด':'ปิด'; dom.btnToggleSound.classList.toggle('active'); });
+    dom.btnStartGame.addEventListener('click', startGame); 
+    dom.btnPlayAgain.addEventListener('click', () => { dom.endScreen.style.display = 'none'; dom.welcomeScreen.style.display = 'flex'; });
+    
     window.addEventListener('resize', () => { camera.left = -window.innerWidth/2; camera.right = window.innerWidth/2; camera.top = window.innerHeight/2; camera.bottom = -window.innerHeight/2; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
     window.addEventListener('load', () => { initThree(); initHandTracking(); gameLoop(); });
   </script>
