@@ -13,6 +13,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <style>
+    /* ==========================================================================
+       CSS STYLES
+       ========================================================================== */
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Mitr', sans-serif; }
     body, html { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; color: #fff; }
 
@@ -21,9 +24,11 @@
     #canvas-container { z-index: 1; pointer-events: none; }
     #hand-debug-canvas { z-index: 3; pointer-events: none; display: none; }
 
+    /* Answer Timer Bar */
     #timer-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 10px; background: rgba(0,0,0,0.5); z-index: 10; display: none; }
     #timer-bar-fill { height: 100%; width: 100%; background: #4ade80; transition: width 0.1s linear, background-color 0.3s; box-shadow: 0 0 10px #4ade80; }
 
+    /* 4 Corners Choices */
     #choices-container { display: none; z-index: 5; }
     .corner-choice {
       position: absolute; width: 28vw; height: 22vh;
@@ -34,39 +39,30 @@
       overflow: hidden;
     }
     
-    .choice-text { 
-      font-size: 1.6rem; font-weight: 600; text-align: center; 
-      color: #f8fafc; z-index: 2; line-height: 1.4; 
-      transition: transform 0.2s ease, color 0.2s ease;
-    }
+    .choice-text { font-size: 1.5rem; font-weight: 500; text-align: center; color: #f8fafc; z-index: 2; line-height: 1.4; transition: transform 0.2s ease, color 0.2s ease; }
     .choice-progress { position: absolute; bottom: 0; left: 0; height: 12px; width: 0%; background: #f59e0b; z-index: 1; transition: width 0.1s linear; }
 
-    .corner-choice.touched {
-      transform: scale(0.92); 
-      border-color: #f59e0b;
-      box-shadow: 0 0 35px rgba(245, 158, 11, 0.9);
-      background: rgba(30, 41, 59, 0.95);
-    }
-    .corner-choice.touched .choice-text {
-      transform: scale(0.85);
-      color: #fbbf24;
-      text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
-    }
+    .corner-choice.touched { transform: scale(0.95); border-color: #f59e0b; box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); background: rgba(30, 41, 59, 0.95); }
+    .corner-choice.touched .choice-text { transform: scale(0.85); color: #fbbf24; }
 
+    /* Zone Positions */
     #choice-1 { top: 3%; left: 2%; }
     #choice-2 { top: 3%; right: 2%; }
     #choice-3 { bottom: 3%; left: 2%; }
     #choice-4 { bottom: 3%; right: 2%; }
 
+    /* Minimal HUD */
     #minimal-hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(15, 23, 42, 0.9); border: 2px solid rgba(56, 189, 248, 0.6); border-radius: 16px; padding: 10px 30px; display: none; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
     .minimal-text { font-size: 1.3rem; font-weight: 500; color: #38bdf8; }
     .score-highlight { color: #fbbf24; font-weight: 700; font-size: 1.5rem; margin-left: 10px; }
 
+    /* Score Popup */
     #score-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 6rem; font-weight: 700; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; text-shadow: 0 8px 25px rgba(0,0,0,0.9); }
     #score-popup.show { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
     .score-add { color: #4ade80; }
     .score-sub { color: #ef4444; }
 
+    /* Reading Phase Overlay */
     #reading-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 15; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .reading-box { background: #1e293b; border: 3px solid #38bdf8; border-radius: 20px; padding: 40px; max-width: 900px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
     .reading-stage { color: #38bdf8; font-size: 1.6rem; font-weight: 600; margin-bottom: 15px; }
@@ -74,6 +70,7 @@
     .reading-timer { font-size: 6rem; font-weight: 700; color: #fbbf24; text-shadow: 0 4px 20px rgba(251, 191, 36, 0.6); margin-bottom: 10px; line-height: 1;}
     .reading-instruction { color: #94a3b8; font-size: 1.2rem; }
 
+    /* Penalty Phase Overlay */
     #penalty-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(8px); z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .penalty-tracker-container { display: flex; gap: 50px; align-items: center; margin-top: 30px; }
     .penalty-tracker { width: 60px; height: 350px; border: 4px solid #475569; border-radius: 30px; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
@@ -84,6 +81,7 @@
     #penalty-counter { font-size: 8rem; color: #fbbf24; font-weight: bold; line-height: 1; text-shadow: 0 5px 25px rgba(251, 191, 36, 0.5); }
     #penalty-guidance { font-size: 2.2rem; color: #38bdf8; margin-top: 15px; font-weight: 600; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);}
 
+    /* Modals */
     #welcome-screen, #end-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
     .modal-box { background: #1e293b; border: 2px solid #38bdf8; border-radius: 24px; padding: 35px 45px; max-width: 750px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
     .modal-box h1 { font-size: 2.5rem; color: #38bdf8; margin-bottom: 10px; text-shadow: 0 0 15px rgba(56,189,248,0.4);}
@@ -98,12 +96,14 @@
 </head>
 <body>
 
+  <!-- WebCam & 3D Layer -->
   <video id="webcam-video" playsinline></video>
   <canvas id="hand-debug-canvas"></canvas>
   <div id="canvas-container"></div>
   <div id="score-popup"></div>
   <div id="timer-bar-container"><div id="timer-bar-fill"></div></div>
 
+  <!-- Choices -->
   <div id="choices-container">
     <div class="corner-choice" id="choice-1">
       <div class="choice-text" id="ans-text-1">-</div>
@@ -123,21 +123,23 @@
     </div>
   </div>
 
+  <!-- Reading Overlay (7 Seconds) -->
   <div id="reading-overlay">
     <div class="reading-box">
       <div id="reading-stage" class="reading-stage">ด่านที่ X</div>
       <div id="reading-desc" class="reading-desc">โจทย์สารเคมี</div>
-      <div id="reading-timer" class="reading-timer">5</div>
-      <div class="reading-instruction">อ่านโจทย์ให้พร้อม มีเวลาตอบเพียง 5 วินาทีเท่านั้น!</div>
+      <div id="reading-timer" class="reading-timer">7</div>
+      <div class="reading-instruction">เตรียมตัว! มีเวลาตอบ 10 วินาที ⏱️</div>
     </div>
   </div>
 
+  <!-- Penalty Overlay -->
   <div id="penalty-overlay">
     <h1 style="color:#ef4444; font-size:3.5rem; margin-bottom:10px; text-shadow: 0 0 20px rgba(239,68,68,0.6);" id="penalty-title">ตอบผิด!</h1>
-    <p style="font-size:1.6rem; color:#cbd5e1;">บทลงโทษ: ยกแขนขึ้นสุด-ลงสุด 10 ครั้ง เพื่อรับคำถามใหม่</p>
+    <p style="font-size:1.6rem; color:#cbd5e1;">บทลงโทษสุ่ม! ต้องทำให้ผ่านถึงจะได้คำถามใหม่</p>
     
     <div class="penalty-tracker-container">
-      <div class="penalty-tracker">
+      <div class="penalty-tracker" id="tracker-bar" style="display: none;">
         <div class="penalty-up-zone"></div>
         <div class="penalty-down-zone"></div>
         <div id="penalty-hand-line" class="penalty-hand-line" style="bottom: 50%;"></div>
@@ -153,15 +155,16 @@
     <div class="minimal-text" id="minimal-q-num">ด่าน 1 | ข้อ 1/3 <span class="score-highlight">คะแนน: 0</span></div>
   </div>
 
+  <!-- หน้าเริ่มเกม -->
   <div id="welcome-screen">
     <div class="modal-box">
-      <h1>🧬 AR ภารกิจเคมี: ฟิตร่างกาย</h1>
+      <h1>🧬 AR ภารกิจเคมี: มินิเกมสุดฟิต</h1>
       
       <div class="rules-card">
         🎯 <strong>วิธีการเล่น:</strong><br><br>
-        1. ⏱️ <strong>อ่านโจทย์:</strong> มีเวลา 5 วินาทีในการอ่าน<br>
-        2. ✋ <strong>ตอบคำถาม:</strong> นำแขนแตะที่คำตอบ 4 มุมจอ <strong>ค้างไว้ 1.5 วินาที</strong> ภายในเวลา 5 วินาที<br>
-        3. 💪 <strong>บทลงโทษ:</strong> หากตอบผิด หรือหมดเวลา จะต้องทำท่ายกแขนขึ้น-ลง 10 ครั้ง เพื่อสุ่มคำถามใหม่
+        1. ⏱️ <strong>อ่านโจทย์:</strong> 7 วินาที จากนั้นจะมีเวลา <strong>10 วินาที</strong> ในการตอบ<br>
+        2. ✋ <strong>แตะมุมจอ:</strong> นำมือหรือแขนแตะกรอบคำตอบค้างไว้ 1.5 วินาที<br>
+        3. 🎲 <strong>สุ่มบทลงโทษ:</strong> หากตอบผิดหรือหมดเวลา ระบบจะสุ่มบทลงโทษ (เช่น ยกแขน, ตบมือ, ปัดกระจก ฯลฯ) ต้องทำครบจึงจะได้แก้ตัวข้อใหม่
       </div>
       
       <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 พิมพ์ชื่อ-นามสกุล..." autocomplete="off">
@@ -170,6 +173,7 @@
     </div>
   </div>
 
+  <!-- หน้าจบเกม -->
   <div id="end-screen" style="display:none;">
     <div class="modal-box">
       <h1 style="font-size:3.5rem;">🏆 ยอดเยี่ยม!</h1>
@@ -185,11 +189,13 @@
 
   <script>
     /* ==========================================================================
-       DATA GENERATION
+       1. DATA GENERATION & SETTINGS
        ========================================================================== */
+    // ⚠️ แก้ไข GAS_URL เป็นลิงก์ Google Apps Script ของคุณครู ⚠️
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxZYt87fSUExqnXL7cPIKvDWOFHj1ya3N5OD_zm0tkwrfNWHR4qE85EhYBJi8khQi_I/exec"; 
     let syncInterval; 
 
+    // สร้างคลังโจทย์ C1-C10
     const STAGE_POOLS = [[], [], [], [], []];
     const prefixData = [
       {c: 1, p: "meth-"}, {c: 2, p: "eth-"}, {c: 3, p: "prop-"}, {c: 4, p: "but-"}, {c: 5, p: "pent-"},
@@ -224,6 +230,7 @@
       }
     }
 
+    // ฟิกซ์คำถามแรกๆ ไว้เป็นแบบอย่างให้เห็นชัดเจน
     STAGE_POOLS[0][0] = { id: 'user_1', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คาร์บอน 1 อะตอม ใช้คำขึ้นต้นว่าอะไร?", correct: "meth-", wrongs: ["eth-", "prop-", "but-"] };
     STAGE_POOLS[0][1] = { id: 'user_2', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คำว่า pent- หมายถึงคาร์บอนกี่อะตอม?", correct: "5", wrongs: ["4", "6", "7"] };
     STAGE_POOLS[0][2] = { id: 'user_3', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "โซ่คาร์บอนมี 8 อะตอม ต้องใช้คำขึ้นต้นว่า?", correct: "oct-", wrongs: ["hept-", "non-", "dec-"] };
@@ -237,7 +244,7 @@
       cTexts: [document.getElementById('ans-text-1'), document.getElementById('ans-text-2'), document.getElementById('ans-text-3'), document.getElementById('ans-text-4')],
       scorePopup: document.getElementById('score-popup'), timerBarCont: document.getElementById('timer-bar-container'), timerBarFill: document.getElementById('timer-bar-fill'),
       readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), 
-      penaltyOverlay: document.getElementById('penalty-overlay'), penaltyTitle: document.getElementById('penalty-title'), penaltyHandLine: document.getElementById('penalty-hand-line'), penaltyCounter: document.getElementById('penalty-counter'), penaltyGuidance: document.getElementById('penalty-guidance'),
+      penaltyOverlay: document.getElementById('penalty-overlay'), penaltyTitle: document.getElementById('penalty-title'), penaltyHandLine: document.getElementById('penalty-hand-line'), penaltyCounter: document.getElementById('penalty-counter'), penaltyGuidance: document.getElementById('penalty-guidance'), trackerBar: document.getElementById('tracker-bar'),
       minimalHud: document.getElementById('minimal-hud'), minimalQNum: document.getElementById('minimal-q-num'), 
       welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), setupStatus: document.getElementById('setup-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), finalScoreVal: document.getElementById('final-score-val'),
       inputPlayerName: document.getElementById('input-player-name'), finalPlayerName: document.getElementById('final-player-name'), saveDataStatus: document.getElementById('save-data-status')
@@ -245,14 +252,15 @@
 
     const state = { 
       playerName: "", score: 0, currentStage: 0, correctInStage: 0, targetPerStage: 3, usedQuestionIds: new Set(),
-      isGameRunning: false, isReading: false, isAnswering: false, isPenalty: false,
-      soundEnabled: true, camReady: false, aiReady: false, particles: [], currentOptions: [], 
-      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 1.5, 
-      answerTimer: 5.0, lastTickTime: 6, penaltyReps: 0, penaltyPhase: 'WAIT_UP'
+      isGameRunning: false, isReading: false, isAnswering: false, isPenalty: false, soundEnabled: true, camReady: false, aiReady: false, particles: [], currentOptions: [], 
+      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 1.5, // แตะ 1.5 วิ
+      answerTimer: 10.0, lastTickTime: 11, // ตอบ 10 วิ
+      availablePenalties: [], penaltyType: '', penaltyProgress: 0, penaltyMax: 10, penaltyPhase: '',
+      lastLeftPos: null, lastRightPos: null, lastPctLvl: 0, lastSec: 0
     };
 
     /* ==========================================================================
-       SUPER JUICY SOUND ENGINE (Web Audio API)
+       2. SOUND ENGINE (Web Audio API)
        ========================================================================== */
     class SoundEngine {
       constructor() { this.ctx = null; this.chargeOsc = null; this.chargeGain = null; }
@@ -266,18 +274,15 @@
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
       }
 
-      // 1. เสียงเริ่มเกมแบบ 8-bit อลังการ
       gameStart() { 
         if (!state.soundEnabled || !this.ctx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; // C E G C
+        const notes = [523.25, 659.25, 783.99, 1046.50]; 
         notes.forEach((f, idx) => { setTimeout(() => this.playTone(f, 'square', 0.3, 0.15), idx * 120); }); 
       }
 
-      // 2. เสียงนับถอยหลัง (Tick)
       countdownBeep() { this.playTone(600, 'triangle', 0.1, 0.2); }
       goBeep() { this.playTone(1200, 'square', 0.4, 0.2); }     
       
-      // 3. เสียงชาร์จพลังเมื่อเอามือแตะกรอบ
       startCharge() { 
         if (!state.soundEnabled || !this.ctx || this.chargeOsc) return;
         this.chargeOsc = this.ctx.createOscillator(); this.chargeGain = this.ctx.createGain();
@@ -288,57 +293,42 @@
       }
       updateCharge(ratio) {
         if (!this.chargeOsc || !this.ctx) return;
-        // ลากเสียงสูงขึ้นเรื่อยๆ (Pitch rise)
         this.chargeOsc.frequency.setTargetAtTime(300 + ratio * 800, this.ctx.currentTime, 0.05);
         this.chargeGain.gain.setTargetAtTime(0.05 + ratio * 0.15, this.ctx.currentTime, 0.05);
       }
       stopCharge() { if (this.chargeOsc) { try { this.chargeGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03); setTimeout(() => { if (this.chargeOsc) { this.chargeOsc.stop(); this.chargeOsc.disconnect(); this.chargeOsc = null; } }, 50); } catch(e) {} } }
       
-      // 4. เสียงตอบถูก (Mario Coin Style)
       hitCorrect() { 
         if (!state.soundEnabled || !this.ctx) return; 
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(987.77, t); // B5
-        osc.frequency.setValueAtTime(1318.51, t + 0.1); // E6
-        gain.gain.setValueAtTime(0, t);
-        gain.gain.linearRampToValueAtTime(0.3, t + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.5);
+        osc.type = 'sine'; osc.frequency.setValueAtTime(987.77, t); osc.frequency.setValueAtTime(1318.51, t + 0.1); 
+        gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.3, t + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.5);
       }
       
-      // 5. เสียงตอบผิด (Game Show Buzzer)
       hitWrong() {
         if (!state.soundEnabled || !this.ctx) return;
         const t = this.ctx.currentTime;
         const osc1 = this.ctx.createOscillator(); const osc2 = this.ctx.createOscillator(); const gain = this.ctx.createGain();
         osc1.type = 'sawtooth'; osc2.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(150, t); osc2.frequency.setValueAtTime(155, t); // Detuned
+        osc1.frequency.setValueAtTime(150, t); osc2.frequency.setValueAtTime(155, t); 
         osc1.frequency.exponentialRampToValueAtTime(40, t + 0.4); osc2.frequency.exponentialRampToValueAtTime(45, t + 0.4);
         gain.gain.setValueAtTime(0.4, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
         osc1.connect(gain); osc2.connect(gain); gain.connect(this.ctx.destination);
         osc1.start(t); osc2.start(t); osc1.stop(t + 0.5); osc2.stop(t + 0.5);
       }
 
-      // 6. เสียงเตือนหมดเวลา
       timerTick() { this.playTone(1500, 'square', 0.05, 0.1); }
 
-      // 7. เสียงออกกำลังกาย สไลด์ขึ้น/ลง
-      repUp() { 
+      cuteCount(step) {
         if (!state.soundEnabled || !this.ctx) return;
-        const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(300, t); osc.frequency.exponentialRampToValueAtTime(800, t + 0.2);
-        gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.3);
-      }
-      repDown() { 
-        if (!state.soundEnabled || !this.ctx) return;
-        const t = this.ctx.currentTime; const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(800, t); osc.frequency.exponentialRampToValueAtTime(300, t + 0.2);
-        gain.gain.setValueAtTime(0.3, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
-        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.3);
+        const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
+        osc.type = 'sine'; let baseFreq = 600 + (step * 50); 
+        osc.frequency.setValueAtTime(baseFreq, t); osc.frequency.exponentialRampToValueAtTime(baseFreq + 200, t + 0.1);
+        gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.2, t + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+        osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.2);
       }
 
       finishGame() { [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, i) => { setTimeout(() => this.playTone(f, 'triangle', 0.4, 0.3), i * 140); }); }
@@ -346,7 +336,7 @@
     const sound = new SoundEngine();
 
     /* ==========================================================================
-       THREE.JS SETUP (Particles only)
+       3. THREE.JS (Particles)
        ========================================================================== */
     let scene, camera, renderer;
     const viewWidth = window.innerWidth; const viewHeight = window.innerHeight;
@@ -380,7 +370,7 @@
     }
 
     /* ==========================================================================
-       GAME LOGIC
+       4. GAME LOGIC
        ========================================================================== */
     function spawnQuestionRound() {
       if (state.currentStage >= 5) { endGame(); return; }
@@ -396,14 +386,12 @@
       dom.readingStage.innerText = `ด่านที่ ${state.currentStage + 1} (ผ่านแล้ว ${state.correctInStage}/${state.targetPerStage})`; 
       dom.readingDesc.innerText = qData.desc; 
       
-      dom.minimalHud.style.display = 'none';
-      dom.choicesContainer.style.display = 'none'; 
-      dom.timerBarCont.style.display = 'none';
+      dom.minimalHud.style.display = 'none'; dom.choicesContainer.style.display = 'none'; dom.timerBarCont.style.display = 'none';
 
       state.isReading = true; state.isAnswering = false; state.isPenalty = false;
       dom.readingOverlay.style.display = 'flex';
       
-      let count = 5; 
+      let count = 7; // อ่านโจทย์ 7 วินาที
       dom.readingTimer.innerText = count; sound.countdownBeep();
       
       const iv = setInterval(() => {
@@ -411,11 +399,7 @@
         if (count > 0) { dom.readingTimer.innerText = count; sound.countdownBeep(); }
         else {
           clearInterval(iv); dom.readingTimer.innerText = "แตะคำตอบเลย!"; sound.goBeep();
-          setTimeout(() => { 
-            dom.readingOverlay.style.display = 'none'; 
-            state.isReading = false; 
-            setupChoices(qData); 
-          }, 500);
+          setTimeout(() => { dom.readingOverlay.style.display = 'none'; state.isReading = false; setupChoices(qData); }, 500);
         }
       }, 1000);
     }
@@ -431,35 +415,27 @@
       
       for(let i=0; i<4; i++) {
         dom.cTexts[i].innerText = state.currentOptions[i].text;
-        dom.cProgs[i].style.width = '0%';
-        dom.cCards[i].classList.remove('touched');
+        dom.cProgs[i].style.width = '0%'; dom.cCards[i].classList.remove('touched');
       }
       
-      dom.choicesContainer.style.display = 'block';
-      dom.minimalHud.style.display = 'block';
+      dom.choicesContainer.style.display = 'block'; dom.minimalHud.style.display = 'block';
       dom.minimalQNum.innerHTML = `ด่าน ${state.currentStage + 1} | ข้อ ${state.correctInStage + 1}/${state.targetPerStage} <span class="score-highlight">คะแนน: ${state.score}</span>`;
       
-      state.answerTimer = 5.0;
-      state.lastTickTime = 6;
-      dom.timerBarFill.style.width = '100%';
-      dom.timerBarFill.style.backgroundColor = '#4ade80';
+      state.answerTimer = 10.0; // ตอบ 10 วินาที
+      state.lastTickTime = 11;
+      dom.timerBarFill.style.width = '100%'; dom.timerBarFill.style.backgroundColor = '#4ade80';
       dom.timerBarCont.style.display = 'block';
       
-      state.activeChoiceIdx = -1;
-      state.holdTime = 0;
-      state.isAnswering = true;
+      state.activeChoiceIdx = -1; state.holdTime = 0; state.isAnswering = true;
     }
     
     function handleAnswerSelection(choiceIdx) {
-      state.isAnswering = false;
-      sound.stopCharge();
-      dom.choicesContainer.style.display = 'none';
-      dom.timerBarCont.style.display = 'none';
+      state.isAnswering = false; sound.stopCharge();
+      dom.choicesContainer.style.display = 'none'; dom.timerBarCont.style.display = 'none';
       
       if(choiceIdx === -1) {
         addScore(-5); showPopup("หมดเวลา!", 'score-sub'); sound.hitWrong(); createExplosion(0xef4444);
-        setTimeout(startPenalty, 1500);
-        return;
+        setTimeout(startPenalty, 1500); return;
       }
       
       let selectedOption = state.currentOptions[choiceIdx];
@@ -474,31 +450,47 @@
       }
     }
 
+    // --- RANDOM PENALTY SYSTEM ---
     function startPenalty() {
       state.isPenalty = true;
-      state.penaltyReps = 0;
-      state.penaltyPhase = 'WAIT_UP';
+      if(state.availablePenalties.length === 0) {
+        state.availablePenalties = ['UP_DOWN', 'CLAP', 'SHAKE', 'WIPE', 'PEACE'];
+        for(let i=4; i>0; i--) { let j = Math.floor(Math.random()*(i+1)); [state.availablePenalties[i], state.availablePenalties[j]] = [state.availablePenalties[j], state.availablePenalties[i]]; }
+      }
+      state.penaltyType = state.availablePenalties.pop();
+
+      dom.penaltyTitle.innerText = "โดนทำโทษ!"; dom.trackerBar.style.display = 'none'; 
       
-      dom.penaltyTitle.innerText = "โดนทำโทษ!";
-      dom.penaltyCounter.innerText = "0/10";
-      dom.penaltyGuidance.innerText = "ดันมือขึ้นสูงๆ!";
+      if(state.penaltyType === 'UP_DOWN') {
+        state.penaltyMax = 10; state.penaltyProgress = 0; state.penaltyPhase = 'WAIT_UP';
+        dom.penaltyCounter.innerText = "0/10"; dom.penaltyGuidance.innerText = "🏋️ ยกแขนขึ้น-ลง 10 ครั้ง!";
+        dom.trackerBar.style.display = 'block';
+      } else if (state.penaltyType === 'CLAP') {
+        state.penaltyMax = 10; state.penaltyProgress = 0; state.penaltyPhase = 'WAIT_CLAP';
+        dom.penaltyCounter.innerText = "0/10"; dom.penaltyGuidance.innerText = "👏 ตบมือ 10 ครั้ง!";
+      } else if (state.penaltyType === 'SHAKE') {
+        state.penaltyMax = 100; state.penaltyProgress = 0; state.lastPctLvl = 0;
+        dom.penaltyCounter.innerText = "0%"; dom.penaltyGuidance.innerText = "👋 สลัดมือรัวๆ ระบายความร้อน!";
+      } else if (state.penaltyType === 'WIPE') {
+        state.penaltyMax = 10; state.penaltyProgress = 0; state.penaltyPhase = 'WAIT_LEFT';
+        dom.penaltyCounter.innerText = "0/10"; dom.penaltyGuidance.innerText = "🙅‍♂️ ปัดแขนซ้าย-ขวา เช็ดกระจก 10 ครั้ง!";
+      } else if (state.penaltyType === 'PEACE') {
+        state.penaltyMax = 5.0; state.penaltyProgress = 5.0; state.lastSec = 5;
+        dom.penaltyCounter.innerText = "5.0s"; dom.penaltyGuidance.innerText = "✌️ ชูสองนิ้วค้างไว้ 5 วินาที!";
+      }
       
-      dom.minimalHud.style.display = 'none';
-      dom.penaltyOverlay.style.display = 'flex';
+      dom.minimalHud.style.display = 'none'; dom.penaltyOverlay.style.display = 'flex';
     }
 
     function endPenalty() {
-      state.isPenalty = false;
-      dom.penaltyOverlay.style.display = 'none';
-      sound.hitCorrect(); // Play success tone for finishing workout
-      spawnQuestionRound(); 
+      state.isPenalty = false; dom.penaltyOverlay.style.display = 'none'; sound.hitCorrect(); spawnQuestionRound(); 
     }
 
     function addScore(d) { state.score = Math.max(0, state.score + d); }
     function showPopup(t, c) { dom.scorePopup.innerText = t; dom.scorePopup.className = `show ${c}`; setTimeout(() => dom.scorePopup.className = '', 1200); }
 
     /* ==========================================================================
-       AI HAND TRACKING & LOGIC
+       5. AI HAND TRACKING & LOGIC
        ========================================================================== */
     function checkSetupReady() {
       const hasName = dom.inputPlayerName.value.trim().length > 0;
@@ -537,68 +529,107 @@
       if(!state.isGameRunning) return;
       let dt = (Date.now() - lastFrameTime) / 1000; lastFrameTime = Date.now();
       
-      // --- PENALTY MODE (Exercise) ---
+      // --- PENALTY MODE (Random Exercises) ---
       if (state.isPenalty) {
-        let yVals = [];
-        if(lLms) yVals.push(lLms[9].y);
-        if(rLms) yVals.push(rLms[9].y);
-        
-        if (yVals.length > 0) {
-          let avgY = yVals.reduce((a,b)=>a+b) / yVals.length; 
+        if(state.penaltyType === 'UP_DOWN') {
+          let yVals = []; if(lLms) yVals.push(lLms[9].y); if(rLms) yVals.push(rLms[9].y);
+          if (yVals.length > 0) {
+            let avgY = yVals.reduce((a,b)=>a+b) / yVals.length; 
+            dom.penaltyHandLine.style.bottom = ((1.0 - avgY) * 100) + "%";
+            if (state.penaltyPhase === 'WAIT_UP' && avgY < 0.35) {
+              state.penaltyPhase = 'WAIT_DOWN'; dom.penaltyGuidance.innerText = "ดึงแขนลงต่ำๆ!";
+            } else if (state.penaltyPhase === 'WAIT_DOWN' && avgY > 0.65) {
+              state.penaltyPhase = 'WAIT_UP'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
+              dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`; dom.penaltyGuidance.innerText = "ยกแขนขึ้นสูงๆ!";
+              if (state.penaltyProgress >= state.penaltyMax) endPenalty();
+            }
+          }
+        } 
+        else if (state.penaltyType === 'CLAP') {
+          if(lLms && rLms) {
+            let dist = Math.hypot(lLms[9].x - rLms[9].x, lLms[9].y - rLms[9].y);
+            if(state.penaltyPhase === 'WAIT_CLAP' && dist < 0.15) {
+              state.penaltyPhase = 'WAIT_OPEN'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
+              dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
+              if(state.penaltyProgress >= state.penaltyMax) endPenalty();
+            } else if (state.penaltyPhase === 'WAIT_OPEN' && dist > 0.35) { state.penaltyPhase = 'WAIT_CLAP'; }
+          }
+        }
+        else if (state.penaltyType === 'SHAKE') {
+          let speed = 0;
+          if(lLms && state.lastLeftPos) speed += Math.hypot(lLms[9].x - state.lastLeftPos.x, lLms[9].y - state.lastLeftPos.y);
+          if(rLms && state.lastRightPos) speed += Math.hypot(rLms[9].x - state.lastRightPos.x, rLms[9].y - state.lastRightPos.y);
           
-          dom.penaltyHandLine.style.bottom = ((1.0 - avgY) * 100) + "%";
-
-          if (state.penaltyPhase === 'WAIT_UP' && avgY < 0.35) {
-            state.penaltyPhase = 'WAIT_DOWN';
-            sound.repUp();
-            dom.penaltyGuidance.innerText = "ดึงแขนลงต่ำๆ!";
-          } else if (state.penaltyPhase === 'WAIT_DOWN' && avgY > 0.65) {
-            state.penaltyPhase = 'WAIT_UP';
-            state.penaltyReps++;
-            sound.repDown();
-            dom.penaltyCounter.innerText = `${state.penaltyReps}/10`;
-            dom.penaltyGuidance.innerText = "ยกแขนขึ้นสูงๆ!";
-            
-            if (state.penaltyReps >= 10) {
-               endPenalty();
+          if(speed > 0.05) state.penaltyProgress += speed * 6; 
+          state.penaltyProgress = Math.max(0, state.penaltyProgress - dt * 2.5); 
+          
+          let pct = Math.min(100, (state.penaltyProgress / state.penaltyMax) * 100);
+          dom.penaltyCounter.innerText = `${Math.floor(pct)}%`;
+          if(Math.floor(pct/10) > state.lastPctLvl) { sound.cuteCount(Math.floor(pct/10)); state.lastPctLvl = Math.floor(pct/10); }
+          if(pct >= 100) endPenalty();
+        }
+        else if (state.penaltyType === 'WIPE') {
+          let h = lLms || rLms;
+          if(h) {
+            let x = 1 - h[9].x; 
+            if(state.penaltyPhase === 'WAIT_LEFT' && x < 0.3) {
+              state.penaltyPhase = 'WAIT_RIGHT'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
+              dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
+              if(state.penaltyProgress >= state.penaltyMax) endPenalty();
+            } else if (state.penaltyPhase === 'WAIT_RIGHT' && x > 0.7) {
+              state.penaltyPhase = 'WAIT_LEFT'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
+              dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
+              if(state.penaltyProgress >= state.penaltyMax) endPenalty();
             }
           }
         }
+        else if (state.penaltyType === 'PEACE') {
+          let checkPeace = (lms) => {
+            if(!lms) return false;
+            let isStraight = (t, p) => lms[t].y < lms[p].y;
+            let isFolded = (t, p) => lms[t].y > lms[p].y;
+            return isStraight(8, 6) && isStraight(12, 10) && isFolded(16, 14) && isFolded(20, 18);
+          };
+          if(checkPeace(lLms) || checkPeace(rLms)) {
+            state.penaltyProgress -= dt;
+            if(state.penaltyProgress <= 0) { dom.penaltyCounter.innerText = `0.0s`; endPenalty(); }
+            else {
+              dom.penaltyCounter.innerText = `${state.penaltyProgress.toFixed(1)}s`;
+              let secLeft = Math.ceil(state.penaltyProgress);
+              if(secLeft < state.lastSec) { sound.cuteCount(6 - secLeft); state.lastSec = secLeft; }
+            }
+          } else {
+            state.penaltyProgress = state.penaltyMax; dom.penaltyCounter.innerText = `5.0s`; state.lastSec = 5;
+          }
+        }
+
+        state.lastLeftPos = lLms ? {x: lLms[9].x, y: lLms[9].y} : null;
+        state.lastRightPos = rLms ? {x: rLms[9].x, y: rLms[9].y} : null;
         return; 
       }
 
       // --- ANSWERING MODE (Touch corners) ---
       if (state.isAnswering) {
         state.answerTimer -= dt;
-        let pTimer = Math.max(0, state.answerTimer / 5.0);
+        let pTimer = Math.max(0, state.answerTimer / 10.0);
         dom.timerBarFill.style.width = `${pTimer * 100}%`;
         
-        // Timer Warning logic
-        if (state.answerTimer < 3.0) {
+        if (state.answerTimer < 4.0) {
            dom.timerBarFill.style.backgroundColor = '#ef4444'; 
            let currentSec = Math.ceil(state.answerTimer);
-           if (currentSec !== state.lastTickTime && currentSec > 0) {
-             sound.timerTick();
-             state.lastTickTime = currentSec;
-           }
+           if (currentSec !== state.lastTickTime && currentSec > 0) { sound.timerTick(); state.lastTickTime = currentSec; }
         }
         
-        if (state.answerTimer <= 0) {
-          handleAnswerSelection(-1); 
-          return;
-        }
+        if (state.answerTimer <= 0) { handleAnswerSelection(-1); return; }
 
         let touchedIdx = -1;
         let checkZone = (handLms) => {
           if(!handLms) return -1;
           let pts = [handLms[0], handLms[8], handLms[9], handLms[20]];
           for(let pt of pts) {
-            let x = 1 - pt.x; 
-            let y = pt.y;
-            if (x < 0.35 && y < 0.35) return 0; 
-            if (x > 0.65 && y < 0.35) return 1; 
-            if (x < 0.35 && y > 0.65) return 2; 
-            if (x > 0.65 && y > 0.65) return 3; 
+            let x = 1 - pt.x; let y = pt.y;
+            if (x < 0.35 && y < 0.35) return 0; if (x > 0.65 && y < 0.35) return 1; 
+            if (x < 0.35 && y > 0.65) return 2; if (x > 0.65 && y > 0.65) return 3; 
           }
           return -1;
         };
@@ -615,28 +646,21 @@
             if (state.holdTime > 0.1 && state.holdTime < 0.15) sound.startCharge();
             sound.updateCharge(ratio);
 
-            if (state.holdTime >= state.requiredHoldTime) {
-              handleAnswerSelection(touchedIdx);
-            }
+            if (state.holdTime >= state.requiredHoldTime) { handleAnswerSelection(touchedIdx); }
           } else {
-            state.activeChoiceIdx = touchedIdx;
-            state.holdTime = 0;
-            dom.cCards.forEach(c => c.classList.remove('touched'));
-            dom.cCards[touchedIdx].classList.add('touched'); 
+            state.activeChoiceIdx = touchedIdx; state.holdTime = 0;
+            dom.cCards.forEach(c => c.classList.remove('touched')); dom.cCards[touchedIdx].classList.add('touched'); 
             sound.startCharge();
           }
         } else {
-          state.activeChoiceIdx = -1;
-          state.holdTime = 0;
-          sound.stopCharge();
-          dom.cCards.forEach(c => c.classList.remove('touched'));
-          dom.cProgs.forEach(p => p.style.width = '0%');
+          state.activeChoiceIdx = -1; state.holdTime = 0; sound.stopCharge();
+          dom.cCards.forEach(c => c.classList.remove('touched')); dom.cProgs.forEach(p => p.style.width = '0%');
         }
       }
     }
 
     /* ==========================================================================
-       GAME FLOW & REAL-TIME DATA SENDING
+       6. SYSTEM INTEGRATION & REAL-TIME DATA
        ========================================================================== */
     async function sendDataToTeacher(statusText = "กำลังเล่น") {
       if (!GAS_URL) return;
@@ -669,10 +693,7 @@
       state.isGameRunning = false; sound.finishGame();
       if (syncInterval) clearInterval(syncInterval);
       
-      dom.minimalHud.style.display = 'none';
-      dom.choicesContainer.style.display = 'none';
-      dom.timerBarCont.style.display = 'none';
-
+      dom.minimalHud.style.display = 'none'; dom.choicesContainer.style.display = 'none'; dom.timerBarCont.style.display = 'none';
       dom.endScreen.style.display = 'flex'; dom.finalScoreVal.innerText = state.score;
       dom.saveDataStatus.innerHTML = "กำลังสรุปผลส่งให้คุณครู... <div class='spinner' style='display:inline-block; vertical-align:middle; width:16px; height:16px; border-width:2px;'></div>";
       sendDataToTeacher("จบเกม");
@@ -680,7 +701,7 @@
 
     function gameLoop() {
       requestAnimationFrame(gameLoop);
-      if (state.isGameRunning) { updateParticles(); }
+      if (state.isGameRunning) updateParticles();
       renderer.render(scene, camera);
     }
 
