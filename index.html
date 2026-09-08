@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>AR ภารกิจเคมี: ฟิตร่างกายตอบคำถาม (IUPAC)</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,9 +14,9 @@
 
   <style>
     /* ==========================================================================
-       CSS STYLES
+       1. CORE CSS & RESPONSIVE DESIGN
        ========================================================================== */
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Mitr', sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Mitr', sans-serif; touch-action: manipulation; }
     body, html { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; color: #fff; }
 
     #canvas-container, #webcam-video, #hand-debug-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; }
@@ -24,7 +24,6 @@
     #canvas-container { z-index: 1; pointer-events: none; }
     #hand-debug-canvas { z-index: 3; pointer-events: none; display: none; }
 
-    /* Answer Timer Bar */
     #timer-bar-container { position: absolute; top: 0; left: 0; width: 100%; height: 10px; background: rgba(0,0,0,0.5); z-index: 10; display: none; }
     #timer-bar-fill { height: 100%; width: 100%; background: #4ade80; transition: width 0.1s linear, background-color 0.3s; box-shadow: 0 0 10px #4ade80; }
 
@@ -45,16 +44,15 @@
     .corner-choice.touched { transform: scale(0.95); border-color: #f59e0b; box-shadow: 0 0 30px rgba(245, 158, 11, 0.8); background: rgba(30, 41, 59, 0.95); }
     .corner-choice.touched .choice-text { transform: scale(0.85); color: #fbbf24; }
 
-    /* Zone Positions */
     #choice-1 { top: 3%; left: 2%; }
     #choice-2 { top: 3%; right: 2%; }
     #choice-3 { bottom: 3%; left: 2%; }
     #choice-4 { bottom: 3%; right: 2%; }
 
     /* Minimal HUD */
-    #minimal-hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(15, 23, 42, 0.9); border: 2px solid rgba(56, 189, 248, 0.6); border-radius: 16px; padding: 10px 30px; display: none; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); }
-    .minimal-text { font-size: 1.3rem; font-weight: 500; color: #38bdf8; }
-    .score-highlight { color: #fbbf24; font-weight: 700; font-size: 1.5rem; margin-left: 10px; }
+    #minimal-hud { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 6; background: rgba(15, 23, 42, 0.9); border: 2px solid rgba(56, 189, 248, 0.6); border-radius: 16px; padding: 10px 30px; display: none; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.6); width: max-content; max-width: 90vw;}
+    .minimal-text { font-size: 1.2rem; font-weight: 500; color: #38bdf8; }
+    .score-highlight { color: #fbbf24; font-weight: 700; font-size: 1.3rem; margin-left: 10px; }
 
     /* Score Popup */
     #score-popup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0.5); font-size: 6rem; font-weight: 700; opacity: 0; pointer-events: none; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 10; text-shadow: 0 8px 25px rgba(0,0,0,0.9); }
@@ -62,36 +60,59 @@
     .score-add { color: #4ade80; }
     .score-sub { color: #ef4444; }
 
-    /* Reading Phase Overlay */
+    /* Reading Phase */
     #reading-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 15; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
     .reading-box { background: #1e293b; border: 3px solid #38bdf8; border-radius: 20px; padding: 40px; max-width: 900px; width: 100%; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-    .reading-stage { color: #38bdf8; font-size: 1.6rem; font-weight: 600; margin-bottom: 15px; }
-    .reading-desc { color: #f8fafc; font-size: 2.2rem; font-weight: 500; margin-bottom: 30px; line-height: 1.5; }
-    .reading-timer { font-size: 6rem; font-weight: 700; color: #fbbf24; text-shadow: 0 4px 20px rgba(251, 191, 36, 0.6); margin-bottom: 10px; line-height: 1;}
-    .reading-instruction { color: #94a3b8; font-size: 1.2rem; }
+    .reading-stage { color: #38bdf8; font-size: 1.4rem; font-weight: 600; margin-bottom: 10px; }
+    .reading-desc { color: #f8fafc; font-size: 2rem; font-weight: 500; margin-bottom: 25px; line-height: 1.5; }
+    .reading-timer { font-size: 5rem; font-weight: 700; color: #fbbf24; text-shadow: 0 4px 20px rgba(251, 191, 36, 0.6); margin-bottom: 10px; line-height: 1;}
+    .reading-instruction { color: #94a3b8; font-size: 1.1rem; }
 
-    /* Penalty Phase Overlay */
+    /* Penalty Phase */
     #penalty-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(8px); z-index: 20; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; }
-    .penalty-tracker-container { display: flex; gap: 50px; align-items: center; margin-top: 30px; }
-    .penalty-tracker { width: 60px; height: 350px; border: 4px solid #475569; border-radius: 30px; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
+    .penalty-tracker-container { display: flex; gap: 40px; align-items: center; margin-top: 20px; margin-bottom: 20px;}
+    .penalty-tracker { width: 40px; height: 280px; border: 3px solid #475569; border-radius: 20px; position: relative; overflow: hidden; background: rgba(255,255,255,0.05); }
     .penalty-up-zone { position: absolute; top: 0; width: 100%; height: 35%; background: rgba(74, 222, 128, 0.3); border-bottom: 2px dashed #4ade80; }
     .penalty-down-zone { position: absolute; bottom: 0; width: 100%; height: 35%; background: rgba(248, 113, 113, 0.3); border-top: 2px dashed #f87171; }
-    .penalty-hand-line { width: 100%; height: 8px; background: #38bdf8; position: absolute; transition: bottom 0.1s; box-shadow: 0 0 20px #38bdf8; border-radius: 4px; }
+    .penalty-hand-line { width: 100%; height: 6px; background: #38bdf8; position: absolute; transition: bottom 0.1s; box-shadow: 0 0 15px #38bdf8; border-radius: 3px; }
     .penalty-stats { display: flex; flex-direction: column; justify-content: center; align-items: center; }
-    #penalty-counter { font-size: 8rem; color: #fbbf24; font-weight: bold; line-height: 1; text-shadow: 0 5px 25px rgba(251, 191, 36, 0.5); }
-    #penalty-guidance { font-size: 2.2rem; color: #38bdf8; margin-top: 15px; font-weight: 600; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);}
+    #penalty-counter { font-size: 6rem; color: #fbbf24; font-weight: bold; line-height: 1; text-shadow: 0 5px 20px rgba(251, 191, 36, 0.5); }
+    #penalty-guidance { font-size: 1.8rem; color: #38bdf8; margin-top: 15px; font-weight: 600; text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);}
 
     /* Modals */
     #welcome-screen, #end-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(15, 23, 42, 0.95); z-index: 25; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-    .modal-box { background: #1e293b; border: 2px solid #38bdf8; border-radius: 24px; padding: 35px 45px; max-width: 750px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
-    .modal-box h1 { font-size: 2.5rem; color: #38bdf8; margin-bottom: 10px; text-shadow: 0 0 15px rgba(56,189,248,0.4);}
+    .modal-box { background: #1e293b; border: 2px solid #38bdf8; border-radius: 20px; padding: 30px; max-width: 600px; width: 100%; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+    .modal-box h1 { font-size: 2.2rem; color: #38bdf8; margin-bottom: 10px; text-shadow: 0 0 15px rgba(56,189,248,0.4);}
     
-    .rules-card { background: #0f172a; border-radius: 12px; padding: 25px; text-align: left; font-size: 1.1rem; color: #e2e8f0; margin-bottom: 25px; line-height: 1.7; border: 1px solid #334155;}
-    .input-player-name { width: 100%; padding: 16px 20px; font-size: 1.3rem; background: #0f172a; border: 2px solid #475569; border-radius: 12px; color: #f8fafc; text-align: center; margin-bottom: 20px; font-weight: 500;}
+    .rules-card { background: #0f172a; border-radius: 12px; padding: 20px; text-align: left; font-size: 1rem; color: #e2e8f0; margin-bottom: 20px; line-height: 1.6; border: 1px solid #334155;}
+    .input-player-name { width: 100%; padding: 14px 20px; font-size: 1.2rem; background: #0f172a; border: 2px solid #475569; border-radius: 10px; color: #f8fafc; text-align: center; margin-bottom: 15px; font-weight: 500;}
     .input-player-name:focus { outline: none; border-color: #38bdf8; box-shadow: 0 0 20px rgba(56, 189, 248, 0.4); }
-    .btn-action { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; border: none; padding: 16px 50px; font-size: 1.4rem; font-weight: 600; border-radius: 14px; cursor: pointer; transition: all 0.2s; margin-top:10px; box-shadow: 0 6px 25px rgba(14, 165, 233, 0.5); }
-    .btn-action:hover { transform: translateY(-3px) scale(1.05); box-shadow: 0 10px 30px rgba(14, 165, 233, 0.7); }
+    
+    /* Buttons */
+    .btn-action { background: linear-gradient(135deg, #0ea5e9, #2563eb); color: #fff; border: none; padding: 14px 40px; font-size: 1.2rem; font-weight: 600; border-radius: 12px; cursor: pointer; transition: all 0.2s; margin-top:10px; box-shadow: 0 6px 20px rgba(14, 165, 233, 0.5); pointer-events: auto;}
+    .btn-action:hover { transform: translateY(-2px) scale(1.02); box-shadow: 0 8px 25px rgba(14, 165, 233, 0.7); }
     .btn-action:disabled { background: #475569; cursor: not-allowed; box-shadow: none; transform: none; }
+    .btn-skip { background: linear-gradient(135deg, #8b5cf6, #6d28d9); box-shadow: 0 6px 20px rgba(139, 92, 246, 0.4); padding: 12px 30px; font-size: 1.1rem; }
+
+    /* ================= RESPONSIVE MOBILE ADJUSTMENTS ================= */
+    @media (max-width: 768px) {
+      .corner-choice { width: 44vw; height: 18vh; padding: 10px; }
+      .choice-text { font-size: 1.1rem; }
+      #choice-1 { top: 2%; left: 2%; } #choice-2 { top: 2%; right: 2%; }
+      #choice-3 { bottom: 2%; left: 2%; } #choice-4 { bottom: 2%; right: 2%; }
+      .reading-box { padding: 25px; }
+      .reading-desc { font-size: 1.5rem; }
+      .reading-timer { font-size: 4rem; }
+      #penalty-title { font-size: 2.5rem; }
+      #penalty-overlay p { font-size: 1.2rem; }
+      #penalty-counter { font-size: 5rem; }
+      #penalty-guidance { font-size: 1.5rem; }
+      .modal-box h1 { font-size: 1.8rem; }
+      .rules-card { font-size: 0.95rem; padding: 15px; }
+      .minimal-text { font-size: 1rem; }
+      .score-highlight { font-size: 1.1rem; }
+      #score-popup { font-size: 4rem; }
+    }
   </style>
 </head>
 <body>
@@ -105,25 +126,13 @@
 
   <!-- Choices -->
   <div id="choices-container">
-    <div class="corner-choice" id="choice-1">
-      <div class="choice-text" id="ans-text-1">-</div>
-      <div class="choice-progress" id="prog-1"></div>
-    </div>
-    <div class="corner-choice" id="choice-2">
-      <div class="choice-text" id="ans-text-2">-</div>
-      <div class="choice-progress" id="prog-2"></div>
-    </div>
-    <div class="corner-choice" id="choice-3">
-      <div class="choice-text" id="ans-text-3">-</div>
-      <div class="choice-progress" id="prog-3"></div>
-    </div>
-    <div class="corner-choice" id="choice-4">
-      <div class="choice-text" id="ans-text-4">-</div>
-      <div class="choice-progress" id="prog-4"></div>
-    </div>
+    <div class="corner-choice" id="choice-1"><div class="choice-text" id="ans-text-1">-</div><div class="choice-progress" id="prog-1"></div></div>
+    <div class="corner-choice" id="choice-2"><div class="choice-text" id="ans-text-2">-</div><div class="choice-progress" id="prog-2"></div></div>
+    <div class="corner-choice" id="choice-3"><div class="choice-text" id="ans-text-3">-</div><div class="choice-progress" id="prog-3"></div></div>
+    <div class="corner-choice" id="choice-4"><div class="choice-text" id="ans-text-4">-</div><div class="choice-progress" id="prog-4"></div></div>
   </div>
 
-  <!-- Reading Overlay (7 Seconds) -->
+  <!-- Reading Overlay -->
   <div id="reading-overlay">
     <div class="reading-box">
       <div id="reading-stage" class="reading-stage">ด่านที่ X</div>
@@ -133,10 +142,10 @@
     </div>
   </div>
 
-  <!-- Penalty Overlay -->
+  <!-- Penalty / Exercise Overlay -->
   <div id="penalty-overlay">
-    <h1 style="color:#ef4444; font-size:3.5rem; margin-bottom:10px; text-shadow: 0 0 20px rgba(239,68,68,0.6);" id="penalty-title">ตอบผิด!</h1>
-    <p style="font-size:1.6rem; color:#cbd5e1;">บทลงโทษสุ่ม! ต้องทำให้ผ่านถึงจะได้คำถามใหม่</p>
+    <h1 style="color:#fbbf24; margin-bottom:5px; text-shadow: 0 0 15px rgba(251,191,36,0.6);" id="penalty-title">เสริมแรงกันหน่อย!</h1>
+    <p style="color:#cbd5e1;">สุ่มภารกิจฟิตร่างกาย! ทำสำเร็จหรือกดผ่านเพื่อรับข้อใหม่</p>
     
     <div class="penalty-tracker-container">
       <div class="penalty-tracker" id="tracker-bar" style="display: none;">
@@ -149,6 +158,9 @@
         <div id="penalty-guidance">ดันมือขึ้นสูงๆ!</div>
       </div>
     </div>
+
+    <!-- ปุ่มกดผ่าน -->
+    <button id="btn-skip-penalty" class="btn-action btn-skip">⏭️ ข้ามภารกิจ (ผ่าน)</button>
   </div>
 
   <div id="minimal-hud">
@@ -162,13 +174,13 @@
       
       <div class="rules-card">
         🎯 <strong>วิธีการเล่น:</strong><br><br>
-        1. ⏱️ <strong>อ่านโจทย์:</strong> 7 วินาที จากนั้นจะมีเวลา <strong>10 วินาที</strong> ในการตอบ<br>
+        1. ⏱️ <strong>อ่านโจทย์:</strong> 7 วินาที จากนั้นมีเวลา <strong>10 วินาที</strong> ในการตอบ<br>
         2. ✋ <strong>แตะมุมจอ:</strong> นำมือหรือแขนแตะกรอบคำตอบค้างไว้ 1.5 วินาที<br>
-        3. 🎲 <strong>สุ่มบทลงโทษ:</strong> หากตอบผิดหรือหมดเวลา ระบบจะสุ่มบทลงโทษ (เช่น ยกแขน, ตบมือ, ปัดกระจก ฯลฯ) ต้องทำครบจึงจะได้แก้ตัวข้อใหม่
+        3. 💪 <strong>เสริมแรง:</strong> หากตอบผิด หรือหมดเวลา จะสุ่มภารกิจฟิตร่างกาย (มีปุ่มกดข้ามได้) ทำเสร็จรับคำถามใหม่
       </div>
       
       <input type="text" id="input-player-name" class="input-player-name" placeholder="📝 พิมพ์ชื่อ-นามสกุล..." autocomplete="off">
-      <div id="setup-status" style="color:#fbbf24; margin-bottom:10px; font-weight:500;">กำลังโหลดระบบ AI และกล้อง...</div>
+      <div id="setup-status" style="color:#fbbf24; margin-bottom:10px; font-weight:500;">กำลังโหลดระบบกล้องและ AI...</div>
       <button id="btn-start-game" class="btn-action" disabled>เริ่มเกมทันที 🚀</button>
     </div>
   </div>
@@ -176,14 +188,14 @@
   <!-- หน้าจบเกม -->
   <div id="end-screen" style="display:none;">
     <div class="modal-box">
-      <h1 style="font-size:3.5rem;">🏆 ยอดเยี่ยม!</h1>
-      <p class="subtitle" style="font-size:1.3rem;">คุณผ่านการทดสอบทักษะเคมีทั้ง 5 ด่านเรียบร้อยแล้ว</p>
-      <div style="margin: 40px 0;">
-        <span style="font-size:1.3rem; color:#94a3b8;">คะแนนรวมของ <span id="final-player-name" style="color:#fff; font-weight:600;"></span></span>
-        <div id="final-score-val" style="font-size: 6rem; color: #fbbf24; font-weight:700; text-shadow: 0 0 30px rgba(251,191,36,0.5);">0</div>
+      <h1 style="font-size:3rem;">🏆 ยอดเยี่ยม!</h1>
+      <p class="subtitle" style="font-size:1.1rem;">คุณผ่านภารกิจทั้ง 5 ด่านเรียบร้อยแล้ว</p>
+      <div style="margin: 30px 0;">
+        <span style="font-size:1.1rem; color:#94a3b8;">คะแนนรวมของ <span id="final-player-name" style="color:#fff; font-weight:600;"></span></span>
+        <div id="final-score-val" style="font-size: 5rem; color: #fbbf24; font-weight:700; text-shadow: 0 0 25px rgba(251,191,36,0.5);">0</div>
       </div>
-      <div id="save-data-status" style="color:#4ade80; font-size:1.2rem; font-weight:500;">กำลังเตรียมส่งข้อมูล...</div>
-      <button id="btn-play-again" class="btn-action" style="margin-top: 20px;">เล่นอีกครั้ง 🔄</button>
+      <div id="save-data-status" style="color:#4ade80; font-size:1.1rem; font-weight:500;">กำลังส่งข้อมูลหาคุณครู...</div>
+      <button id="btn-play-again" class="btn-action" style="margin-top: 15px;">เล่นอีกครั้ง 🔄</button>
     </div>
   </div>
 
@@ -191,11 +203,9 @@
     /* ==========================================================================
        1. DATA GENERATION & SETTINGS
        ========================================================================== */
-    // ⚠️ แก้ไข GAS_URL เป็นลิงก์ Google Apps Script ของคุณครู ⚠️
     const GAS_URL = "https://script.google.com/macros/s/AKfycbxZYt87fSUExqnXL7cPIKvDWOFHj1ya3N5OD_zm0tkwrfNWHR4qE85EhYBJi8khQi_I/exec"; 
     let syncInterval; 
 
-    // สร้างคลังโจทย์ C1-C10
     const STAGE_POOLS = [[], [], [], [], []];
     const prefixData = [
       {c: 1, p: "meth-"}, {c: 2, p: "eth-"}, {c: 3, p: "prop-"}, {c: 4, p: "but-"}, {c: 5, p: "pent-"},
@@ -230,7 +240,6 @@
       }
     }
 
-    // ฟิกซ์คำถามแรกๆ ไว้เป็นแบบอย่างให้เห็นชัดเจน
     STAGE_POOLS[0][0] = { id: 'user_1', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คาร์บอน 1 อะตอม ใช้คำขึ้นต้นว่าอะไร?", correct: "meth-", wrongs: ["eth-", "prop-", "but-"] };
     STAGE_POOLS[0][1] = { id: 'user_2', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "คำว่า pent- หมายถึงคาร์บอนกี่อะตอม?", correct: "5", wrongs: ["4", "6", "7"] };
     STAGE_POOLS[0][2] = { id: 'user_3', stage: `ด่านที่ 1: สายโซ่หลัก C1-C10`, desc: "โซ่คาร์บอนมี 8 อะตอม ต้องใช้คำขึ้นต้นว่า?", correct: "oct-", wrongs: ["hept-", "non-", "dec-"] };
@@ -244,7 +253,7 @@
       cTexts: [document.getElementById('ans-text-1'), document.getElementById('ans-text-2'), document.getElementById('ans-text-3'), document.getElementById('ans-text-4')],
       scorePopup: document.getElementById('score-popup'), timerBarCont: document.getElementById('timer-bar-container'), timerBarFill: document.getElementById('timer-bar-fill'),
       readingOverlay: document.getElementById('reading-overlay'), readingStage: document.getElementById('reading-stage'), readingDesc: document.getElementById('reading-desc'), readingTimer: document.getElementById('reading-timer'), 
-      penaltyOverlay: document.getElementById('penalty-overlay'), penaltyTitle: document.getElementById('penalty-title'), penaltyHandLine: document.getElementById('penalty-hand-line'), penaltyCounter: document.getElementById('penalty-counter'), penaltyGuidance: document.getElementById('penalty-guidance'), trackerBar: document.getElementById('tracker-bar'),
+      penaltyOverlay: document.getElementById('penalty-overlay'), penaltyTitle: document.getElementById('penalty-title'), penaltyHandLine: document.getElementById('penalty-hand-line'), penaltyCounter: document.getElementById('penalty-counter'), penaltyGuidance: document.getElementById('penalty-guidance'), trackerBar: document.getElementById('tracker-bar'), btnSkipPenalty: document.getElementById('btn-skip-penalty'),
       minimalHud: document.getElementById('minimal-hud'), minimalQNum: document.getElementById('minimal-q-num'), 
       welcomeScreen: document.getElementById('welcome-screen'), endScreen: document.getElementById('end-screen'), setupStatus: document.getElementById('setup-status'), btnStartGame: document.getElementById('btn-start-game'), btnPlayAgain: document.getElementById('btn-play-again'), finalScoreVal: document.getElementById('final-score-val'),
       inputPlayerName: document.getElementById('input-player-name'), finalPlayerName: document.getElementById('final-player-name'), saveDataStatus: document.getElementById('save-data-status')
@@ -253,8 +262,8 @@
     const state = { 
       playerName: "", score: 0, currentStage: 0, correctInStage: 0, targetPerStage: 3, usedQuestionIds: new Set(),
       isGameRunning: false, isReading: false, isAnswering: false, isPenalty: false, soundEnabled: true, camReady: false, aiReady: false, particles: [], currentOptions: [], 
-      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 1.5, // แตะ 1.5 วิ
-      answerTimer: 10.0, lastTickTime: 11, // ตอบ 10 วิ
+      activeChoiceIdx: -1, holdTime: 0, requiredHoldTime: 1.5,
+      answerTimer: 10.0, lastTickTime: 11,
       availablePenalties: [], penaltyType: '', penaltyProgress: 0, penaltyMax: 10, penaltyPhase: '',
       lastLeftPos: null, lastRightPos: null, lastPctLvl: 0, lastSec: 0
     };
@@ -265,7 +274,6 @@
     class SoundEngine {
       constructor() { this.ctx = null; this.chargeOsc = null; this.chargeGain = null; }
       init() { if (!this.ctx) { const AudioContext = window.AudioContext || window.webkitAudioContext; this.ctx = new AudioContext(); } if (this.ctx.state === 'suspended') this.ctx.resume(); }
-      
       playTone(freq, type, duration, vol) {
         if (!state.soundEnabled || !this.ctx) return;
         const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
@@ -273,64 +281,43 @@
         gain.gain.setValueAtTime(vol, this.ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(); osc.stop(this.ctx.currentTime + duration);
       }
-
-      gameStart() { 
-        if (!state.soundEnabled || !this.ctx) return;
-        const notes = [523.25, 659.25, 783.99, 1046.50]; 
-        notes.forEach((f, idx) => { setTimeout(() => this.playTone(f, 'square', 0.3, 0.15), idx * 120); }); 
-      }
-
+      gameStart() { if (!state.soundEnabled || !this.ctx) return; [523.25, 659.25, 783.99, 1046.50].forEach((f, idx) => { setTimeout(() => this.playTone(f, 'square', 0.3, 0.15), idx * 120); }); }
+      btnClick() { this.playTone(600, 'triangle', 0.1, 0.2); }
       countdownBeep() { this.playTone(600, 'triangle', 0.1, 0.2); }
       goBeep() { this.playTone(1200, 'square', 0.4, 0.2); }     
-      
       startCharge() { 
         if (!state.soundEnabled || !this.ctx || this.chargeOsc) return;
-        this.chargeOsc = this.ctx.createOscillator(); this.chargeGain = this.ctx.createGain();
-        this.chargeOsc.type = 'triangle'; 
-        this.chargeOsc.frequency.setValueAtTime(300, this.ctx.currentTime);
-        this.chargeGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
+        this.chargeOsc = this.ctx.createOscillator(); this.chargeGain = this.ctx.createGain(); this.chargeOsc.type = 'triangle'; 
+        this.chargeOsc.frequency.setValueAtTime(300, this.ctx.currentTime); this.chargeGain.gain.setValueAtTime(0.01, this.ctx.currentTime);
         this.chargeOsc.connect(this.chargeGain); this.chargeGain.connect(this.ctx.destination); this.chargeOsc.start();
       }
       updateCharge(ratio) {
         if (!this.chargeOsc || !this.ctx) return;
-        this.chargeOsc.frequency.setTargetAtTime(300 + ratio * 800, this.ctx.currentTime, 0.05);
-        this.chargeGain.gain.setTargetAtTime(0.05 + ratio * 0.15, this.ctx.currentTime, 0.05);
+        this.chargeOsc.frequency.setTargetAtTime(300 + ratio * 800, this.ctx.currentTime, 0.05); this.chargeGain.gain.setTargetAtTime(0.05 + ratio * 0.15, this.ctx.currentTime, 0.05);
       }
       stopCharge() { if (this.chargeOsc) { try { this.chargeGain.gain.setTargetAtTime(0.0001, this.ctx.currentTime, 0.03); setTimeout(() => { if (this.chargeOsc) { this.chargeOsc.stop(); this.chargeOsc.disconnect(); this.chargeOsc = null; } }, 50); } catch(e) {} } }
-      
       hitCorrect() { 
-        if (!state.soundEnabled || !this.ctx) return; 
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine'; osc.frequency.setValueAtTime(987.77, t); osc.frequency.setValueAtTime(1318.51, t + 0.1); 
+        if (!state.soundEnabled || !this.ctx) return; const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = 'sine'; osc.frequency.setValueAtTime(987.77, t); osc.frequency.setValueAtTime(1318.51, t + 0.1); 
         gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.3, t + 0.05); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.5);
       }
-      
       hitWrong() {
-        if (!state.soundEnabled || !this.ctx) return;
-        const t = this.ctx.currentTime;
+        if (!state.soundEnabled || !this.ctx) return; const t = this.ctx.currentTime;
         const osc1 = this.ctx.createOscillator(); const osc2 = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc1.type = 'sawtooth'; osc2.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(150, t); osc2.frequency.setValueAtTime(155, t); 
+        osc1.type = 'sawtooth'; osc2.type = 'sawtooth'; osc1.frequency.setValueAtTime(150, t); osc2.frequency.setValueAtTime(155, t); 
         osc1.frequency.exponentialRampToValueAtTime(40, t + 0.4); osc2.frequency.exponentialRampToValueAtTime(45, t + 0.4);
         gain.gain.setValueAtTime(0.4, t); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.5);
-        osc1.connect(gain); osc2.connect(gain); gain.connect(this.ctx.destination);
-        osc1.start(t); osc2.start(t); osc1.stop(t + 0.5); osc2.stop(t + 0.5);
+        osc1.connect(gain); osc2.connect(gain); gain.connect(this.ctx.destination); osc1.start(t); osc2.start(t); osc1.stop(t + 0.5); osc2.stop(t + 0.5);
       }
-
       timerTick() { this.playTone(1500, 'square', 0.05, 0.1); }
-
       cuteCount(step) {
-        if (!state.soundEnabled || !this.ctx) return;
-        const t = this.ctx.currentTime;
-        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain();
-        osc.type = 'sine'; let baseFreq = 600 + (step * 50); 
+        if (!state.soundEnabled || !this.ctx) return; const t = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator(); const gain = this.ctx.createGain(); osc.type = 'sine'; let baseFreq = 600 + (step * 50); 
         osc.frequency.setValueAtTime(baseFreq, t); osc.frequency.exponentialRampToValueAtTime(baseFreq + 200, t + 0.1);
         gain.gain.setValueAtTime(0, t); gain.gain.linearRampToValueAtTime(0.2, t + 0.02); gain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
         osc.connect(gain); gain.connect(this.ctx.destination); osc.start(t); osc.stop(t + 0.2);
       }
-
       finishGame() { [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((f, i) => { setTimeout(() => this.playTone(f, 'triangle', 0.4, 0.3), i * 140); }); }
     }
     const sound = new SoundEngine();
@@ -351,26 +338,36 @@
     function createExplosion(colorHex) {
       const pMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.9 });
       for(let i=0; i<40; i++) {
-        const p = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), pMat);
-        p.position.set(0, 0, 0); 
+        const p = new THREE.Mesh(new THREE.BoxGeometry(12, 12, 12), pMat); p.position.set(0, 0, 0); 
         const ang = Math.random() * Math.PI * 2; const spd = Math.random() * 30 + 10;
-        scene.add(p);
-        state.particles.push({ mesh: p, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: 1.0 });
+        scene.add(p); state.particles.push({ mesh: p, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, life: 1.0 });
       }
     }
     
     function updateParticles() {
       for(let i = state.particles.length-1; i>=0; i--) {
         let p = state.particles[i]; p.vy -= 1.2; 
-        p.mesh.position.x += p.vx; p.mesh.position.y += p.vy;
-        p.mesh.rotation.z += 0.2; p.mesh.rotation.x += 0.2;
+        p.mesh.position.x += p.vx; p.mesh.position.y += p.vy; p.mesh.rotation.z += 0.2; p.mesh.rotation.x += 0.2;
         p.life -= 0.025; p.mesh.scale.setScalar(Math.max(0, p.life)); p.mesh.material.opacity = p.life;
         if(p.life <= 0) { scene.remove(p.mesh); state.particles.splice(i, 1); }
       }
     }
 
     /* ==========================================================================
-       4. GAME LOGIC
+       4. SCREEN MAPPING (RESPONSIVE AR)
+       ========================================================================== */
+    function getVisibleNormalizedCoords(pt) {
+      if (!dom.video.videoWidth) return { x: 1-pt.x, y: pt.y };
+      const vRatio = dom.video.videoWidth / dom.video.videoHeight;
+      const sRatio = window.innerWidth / window.innerHeight;
+      let rW = window.innerWidth, rH = window.innerHeight, oX = 0, oY = 0;
+      if (sRatio > vRatio) { rH = window.innerWidth / vRatio; oY = (rH - window.innerHeight) / 2; } 
+      else { rW = window.innerHeight * vRatio; oX = (rW - window.innerWidth) / 2; }
+      return { x: ((1 - pt.x) * rW - oX) / window.innerWidth, y: (pt.y * rH - oY) / window.innerHeight };
+    }
+
+    /* ==========================================================================
+       5. GAME LOGIC
        ========================================================================== */
     function spawnQuestionRound() {
       if (state.currentStage >= 5) { endGame(); return; }
@@ -387,11 +384,10 @@
       dom.readingDesc.innerText = qData.desc; 
       
       dom.minimalHud.style.display = 'none'; dom.choicesContainer.style.display = 'none'; dom.timerBarCont.style.display = 'none';
-
       state.isReading = true; state.isAnswering = false; state.isPenalty = false;
       dom.readingOverlay.style.display = 'flex';
       
-      let count = 7; // อ่านโจทย์ 7 วินาที
+      let count = 7; 
       dom.readingTimer.innerText = count; sound.countdownBeep();
       
       const iv = setInterval(() => {
@@ -405,24 +401,15 @@
     }
     
     function setupChoices(qData) {
-      state.currentOptions = [
-        { text: qData.correct, isCorrect: true },
-        { text: qData.wrongs[0], isCorrect: false },
-        { text: qData.wrongs[1], isCorrect: false },
-        { text: qData.wrongs[2], isCorrect: false }
-      ];
+      state.currentOptions = [ { text: qData.correct, isCorrect: true }, { text: qData.wrongs[0], isCorrect: false }, { text: qData.wrongs[1], isCorrect: false }, { text: qData.wrongs[2], isCorrect: false } ];
       for (let i=3; i>0; i--) { const j = Math.floor(Math.random()*(i+1)); [state.currentOptions[i], state.currentOptions[j]] = [state.currentOptions[j], state.currentOptions[i]]; }
       
-      for(let i=0; i<4; i++) {
-        dom.cTexts[i].innerText = state.currentOptions[i].text;
-        dom.cProgs[i].style.width = '0%'; dom.cCards[i].classList.remove('touched');
-      }
+      for(let i=0; i<4; i++) { dom.cTexts[i].innerText = state.currentOptions[i].text; dom.cProgs[i].style.width = '0%'; dom.cCards[i].classList.remove('touched'); }
       
       dom.choicesContainer.style.display = 'block'; dom.minimalHud.style.display = 'block';
       dom.minimalQNum.innerHTML = `ด่าน ${state.currentStage + 1} | ข้อ ${state.correctInStage + 1}/${state.targetPerStage} <span class="score-highlight">คะแนน: ${state.score}</span>`;
       
-      state.answerTimer = 10.0; // ตอบ 10 วินาที
-      state.lastTickTime = 11;
+      state.answerTimer = 10.0; state.lastTickTime = 11;
       dom.timerBarFill.style.width = '100%'; dom.timerBarFill.style.backgroundColor = '#4ade80';
       dom.timerBarCont.style.display = 'block';
       
@@ -450,7 +437,7 @@
       }
     }
 
-    // --- RANDOM PENALTY SYSTEM ---
+    // --- REINFORCEMENT SYSTEM ---
     function startPenalty() {
       state.isPenalty = true;
       if(state.availablePenalties.length === 0) {
@@ -459,7 +446,7 @@
       }
       state.penaltyType = state.availablePenalties.pop();
 
-      dom.penaltyTitle.innerText = "โดนทำโทษ!"; dom.trackerBar.style.display = 'none'; 
+      dom.penaltyTitle.innerText = "เสริมแรงกันหน่อย!"; dom.trackerBar.style.display = 'none'; 
       
       if(state.penaltyType === 'UP_DOWN') {
         state.penaltyMax = 10; state.penaltyProgress = 0; state.penaltyPhase = 'WAIT_UP';
@@ -473,7 +460,7 @@
         dom.penaltyCounter.innerText = "0%"; dom.penaltyGuidance.innerText = "👋 สลัดมือรัวๆ ระบายความร้อน!";
       } else if (state.penaltyType === 'WIPE') {
         state.penaltyMax = 10; state.penaltyProgress = 0; state.penaltyPhase = 'WAIT_LEFT';
-        dom.penaltyCounter.innerText = "0/10"; dom.penaltyGuidance.innerText = "🙅‍♂️ ปัดแขนซ้าย-ขวา เช็ดกระจก 10 ครั้ง!";
+        dom.penaltyCounter.innerText = "0/10"; dom.penaltyGuidance.innerText = "🙅‍♂️ ปัดแขนซ้าย-ขวา 10 ครั้ง!";
       } else if (state.penaltyType === 'PEACE') {
         state.penaltyMax = 5.0; state.penaltyProgress = 5.0; state.lastSec = 5;
         dom.penaltyCounter.innerText = "5.0s"; dom.penaltyGuidance.innerText = "✌️ ชูสองนิ้วค้างไว้ 5 วินาที!";
@@ -482,15 +469,15 @@
       dom.minimalHud.style.display = 'none'; dom.penaltyOverlay.style.display = 'flex';
     }
 
-    function endPenalty() {
-      state.isPenalty = false; dom.penaltyOverlay.style.display = 'none'; sound.hitCorrect(); spawnQuestionRound(); 
-    }
+    function endPenalty() { state.isPenalty = false; dom.penaltyOverlay.style.display = 'none'; sound.hitCorrect(); spawnQuestionRound(); }
+
+    dom.btnSkipPenalty.addEventListener('click', () => { sound.btnClick(); endPenalty(); });
 
     function addScore(d) { state.score = Math.max(0, state.score + d); }
     function showPopup(t, c) { dom.scorePopup.innerText = t; dom.scorePopup.className = `show ${c}`; setTimeout(() => dom.scorePopup.className = '', 1200); }
 
     /* ==========================================================================
-       5. AI HAND TRACKING & LOGIC
+       6. AI HAND TRACKING & LOGIC
        ========================================================================== */
     function checkSetupReady() {
       const hasName = dom.inputPlayerName.value.trim().length > 0;
@@ -518,7 +505,7 @@
       if (results.multiHandLandmarks) {
         for (let i=0; i<results.multiHandLandmarks.length; i++) {
           const lms = results.multiHandLandmarks[i]; const isL = (results.multiHandedness[i].label === 'Right'); 
-          if (isL) left = lms; else right = lms;
+          if (isL && !left) left = lms; else if (!isL && !right) right = lms; else if (!left) left = lms; else if (!right) right = lms;
         }
       }
       processHands(left, right);
@@ -529,15 +516,17 @@
       if(!state.isGameRunning) return;
       let dt = (Date.now() - lastFrameTime) / 1000; lastFrameTime = Date.now();
       
-      // --- PENALTY MODE (Random Exercises) ---
+      // --- REINFORCEMENT MODE ---
       if (state.isPenalty) {
         if(state.penaltyType === 'UP_DOWN') {
-          let yVals = []; if(lLms) yVals.push(lLms[9].y); if(rLms) yVals.push(rLms[9].y);
+          let yVals = []; 
+          if(lLms) yVals.push(getVisibleNormalizedCoords(lLms[9]).y); 
+          if(rLms) yVals.push(getVisibleNormalizedCoords(rLms[9]).y);
           if (yVals.length > 0) {
             let avgY = yVals.reduce((a,b)=>a+b) / yVals.length; 
             dom.penaltyHandLine.style.bottom = ((1.0 - avgY) * 100) + "%";
             if (state.penaltyPhase === 'WAIT_UP' && avgY < 0.35) {
-              state.penaltyPhase = 'WAIT_DOWN'; dom.penaltyGuidance.innerText = "ดึงแขนลงต่ำๆ!";
+              state.penaltyPhase = 'WAIT_DOWN'; dom.penaltyGuidance.innerText = "ดึงแขนลงต่ำๆ!"; sound.repUp();
             } else if (state.penaltyPhase === 'WAIT_DOWN' && avgY > 0.65) {
               state.penaltyPhase = 'WAIT_UP'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
               dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`; dom.penaltyGuidance.innerText = "ยกแขนขึ้นสูงๆ!";
@@ -547,31 +536,40 @@
         } 
         else if (state.penaltyType === 'CLAP') {
           if(lLms && rLms) {
-            let dist = Math.hypot(lLms[9].x - rLms[9].x, lLms[9].y - rLms[9].y);
-            if(state.penaltyPhase === 'WAIT_CLAP' && dist < 0.15) {
+            let pL = getVisibleNormalizedCoords(lLms[9]), pR = getVisibleNormalizedCoords(rLms[9]);
+            let dist = Math.hypot(pL.x - pR.x, pL.y - pR.y);
+            if(state.penaltyPhase === 'WAIT_CLAP' && dist < 0.35) {
               state.penaltyPhase = 'WAIT_OPEN'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
               dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
               if(state.penaltyProgress >= state.penaltyMax) endPenalty();
-            } else if (state.penaltyPhase === 'WAIT_OPEN' && dist > 0.35) { state.penaltyPhase = 'WAIT_CLAP'; }
+            } else if (state.penaltyPhase === 'WAIT_OPEN' && dist > 0.50) { state.penaltyPhase = 'WAIT_CLAP'; }
+          } else if ((lLms || rLms) && state.penaltyPhase === 'WAIT_CLAP') {
+              state.penaltyPhase = 'WAIT_OPEN'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
+              dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
+              if(state.penaltyProgress >= state.penaltyMax) endPenalty();
           }
         }
         else if (state.penaltyType === 'SHAKE') {
           let speed = 0;
-          if(lLms && state.lastLeftPos) speed += Math.hypot(lLms[9].x - state.lastLeftPos.x, lLms[9].y - state.lastLeftPos.y);
-          if(rLms && state.lastRightPos) speed += Math.hypot(rLms[9].x - state.lastRightPos.x, rLms[9].y - state.lastRightPos.y);
+          let cL = lLms ? getVisibleNormalizedCoords(lLms[9]) : null;
+          let cR = rLms ? getVisibleNormalizedCoords(rLms[9]) : null;
+          if(cL && state.lastLeftPos) speed += Math.hypot(cL.x - state.lastLeftPos.x, cL.y - state.lastLeftPos.y);
+          if(cR && state.lastRightPos) speed += Math.hypot(cR.x - state.lastRightPos.x, cR.y - state.lastRightPos.y);
           
-          if(speed > 0.05) state.penaltyProgress += speed * 6; 
+          if(speed > 0.03) state.penaltyProgress += speed * 8; 
           state.penaltyProgress = Math.max(0, state.penaltyProgress - dt * 2.5); 
           
           let pct = Math.min(100, (state.penaltyProgress / state.penaltyMax) * 100);
           dom.penaltyCounter.innerText = `${Math.floor(pct)}%`;
           if(Math.floor(pct/10) > state.lastPctLvl) { sound.cuteCount(Math.floor(pct/10)); state.lastPctLvl = Math.floor(pct/10); }
           if(pct >= 100) endPenalty();
+
+          state.lastLeftPos = cL; state.lastRightPos = cR;
         }
         else if (state.penaltyType === 'WIPE') {
           let h = lLms || rLms;
           if(h) {
-            let x = 1 - h[9].x; 
+            let x = getVisibleNormalizedCoords(h[9]).x; 
             if(state.penaltyPhase === 'WAIT_LEFT' && x < 0.3) {
               state.penaltyPhase = 'WAIT_RIGHT'; state.penaltyProgress++; sound.cuteCount(state.penaltyProgress);
               dom.penaltyCounter.innerText = `${state.penaltyProgress}/${state.penaltyMax}`;
@@ -586,8 +584,7 @@
         else if (state.penaltyType === 'PEACE') {
           let checkPeace = (lms) => {
             if(!lms) return false;
-            let isStraight = (t, p) => lms[t].y < lms[p].y;
-            let isFolded = (t, p) => lms[t].y > lms[p].y;
+            let isStraight = (t, p) => lms[t].y < lms[p].y; let isFolded = (t, p) => lms[t].y > lms[p].y;
             return isStraight(8, 6) && isStraight(12, 10) && isFolded(16, 14) && isFolded(20, 18);
           };
           if(checkPeace(lLms) || checkPeace(rLms)) {
@@ -598,17 +595,12 @@
               let secLeft = Math.ceil(state.penaltyProgress);
               if(secLeft < state.lastSec) { sound.cuteCount(6 - secLeft); state.lastSec = secLeft; }
             }
-          } else {
-            state.penaltyProgress = state.penaltyMax; dom.penaltyCounter.innerText = `5.0s`; state.lastSec = 5;
-          }
+          } else { state.penaltyProgress = state.penaltyMax; dom.penaltyCounter.innerText = `5.0s`; state.lastSec = 5; }
         }
-
-        state.lastLeftPos = lLms ? {x: lLms[9].x, y: lLms[9].y} : null;
-        state.lastRightPos = rLms ? {x: rLms[9].x, y: rLms[9].y} : null;
         return; 
       }
 
-      // --- ANSWERING MODE (Touch corners) ---
+      // --- ANSWERING MODE ---
       if (state.isAnswering) {
         state.answerTimer -= dt;
         let pTimer = Math.max(0, state.answerTimer / 10.0);
@@ -627,9 +619,11 @@
           if(!handLms) return -1;
           let pts = [handLms[0], handLms[8], handLms[9], handLms[20]];
           for(let pt of pts) {
-            let x = 1 - pt.x; let y = pt.y;
-            if (x < 0.35 && y < 0.35) return 0; if (x > 0.65 && y < 0.35) return 1; 
-            if (x < 0.35 && y > 0.65) return 2; if (x > 0.65 && y > 0.65) return 3; 
+            let p = getVisibleNormalizedCoords(pt);
+            if (p.x < 0.40 && p.y < 0.35) return 0; 
+            if (p.x > 0.60 && p.y < 0.35) return 1; 
+            if (p.x < 0.40 && p.y > 0.65) return 2; 
+            if (p.x > 0.60 && p.y > 0.65) return 3; 
           }
           return -1;
         };
@@ -660,7 +654,7 @@
     }
 
     /* ==========================================================================
-       6. SYSTEM INTEGRATION & REAL-TIME DATA
+       7. SYSTEM INTEGRATION
        ========================================================================== */
     async function sendDataToTeacher(statusText = "กำลังเล่น") {
       if (!GAS_URL) return;
@@ -674,25 +668,20 @@
     function startGame() {
       state.playerName = dom.inputPlayerName.value.trim() || "ไม่ระบุชื่อ";
       dom.finalPlayerName.innerText = state.playerName;
-      
       sound.init(); sound.gameStart();
       dom.welcomeScreen.style.display = 'none'; dom.endScreen.style.display = 'none'; 
-      
       state.score = 0; state.currentStage = 0; state.correctInStage = 0; state.usedQuestionIds.clear();
       state.isGameRunning = true; 
       
       sendDataToTeacher("กำลังเล่น");
       if (syncInterval) clearInterval(syncInterval);
       syncInterval = setInterval(() => { if (state.isGameRunning) sendDataToTeacher("กำลังเล่น"); }, 5000);
-      
-      lastFrameTime = Date.now();
-      spawnQuestionRound();
+      lastFrameTime = Date.now(); spawnQuestionRound();
     }
     
     function endGame() {
       state.isGameRunning = false; sound.finishGame();
       if (syncInterval) clearInterval(syncInterval);
-      
       dom.minimalHud.style.display = 'none'; dom.choicesContainer.style.display = 'none'; dom.timerBarCont.style.display = 'none';
       dom.endScreen.style.display = 'flex'; dom.finalScoreVal.innerText = state.score;
       dom.saveDataStatus.innerHTML = "กำลังสรุปผลส่งให้คุณครู... <div class='spinner' style='display:inline-block; vertical-align:middle; width:16px; height:16px; border-width:2px;'></div>";
